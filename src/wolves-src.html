@@ -408,28 +408,38 @@ function pct(a,b){return b>0?Math.round(a/b*100):0}
 function payStatus(owed,paid){if(owed<=0&&paid<=0)return '<span class="pill mute">No dues set</span>';if(paid>=owed)return '<span class="pill ok">Paid</span>';if(paid>0)return '<span class="pill warn">Partial</span>';return '<span class="pill bad">Owing</span>'}
 
 function vOverview(){
-  var up=gamesSorted().filter(function(g){return g.status!=='Cancelled'&&g.status!=='Played'&&(!g.date||g.date>=todayStr())});
-  var ng=up[0], h='';
+  var today=todayStr(),up=gamesSorted().filter(function(g){return g.status!=='Cancelled'&&g.status!=='Played'&&(!g.date||g.date>=today)});
+  var ng=up[0],h='';
   h+=head('Overview',data.updated?'Last updated '+esc(new Date(data.updated).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'})):'');
+  // next game
   if(ng){
-    var d=pd(ng.date),refs=data.refs.filter(function(r){return r.gameId===ng.id}),beer=data.beer.filter(function(b){return b.gameId===ng.id});
+    var d=pd(ng.date),home=isHosted(ng),refs=data.refs.filter(function(r){return r.gameId===ng.id}),beer=data.beer.filter(function(x){return x.gameId===ng.id}),tks=data.tk.filter(function(x){return x.gameId===ng.id});
+    var facts=['<span>'+(ftime(ng.time)||'Time TBD')+'</span>','<span>'+esc(ng.rink||'Rink TBD')+'</span>'];
+    if(home)facts.push('<span>Refs <b>'+(refs.length?esc(refs.map(function(r){return r.name}).join(', ')):'not assigned')+'</b></span>');
+    facts.push('<span>Beer <b>'+(beer.length?esc(beer.map(function(x){return x.bringer}).join(', ')):'nobody yet')+'</b></span>');
+    if(home)facts.push('<span>Timekeeper <b>'+(tks.length?esc(tks.map(function(x){return x.responsible}).join(', ')):'nobody yet')+'</b></span>');
     h+='<div class="next"><div class="datebox">'+(d?'<div class="m">'+MON[d.getMonth()]+'</div><div class="d">'+d.getDate()+'</div><div class="w">'+DOW[d.getDay()]+'</div>':'<div class="d">TBD</div>')+'</div>'+
-      '<div style="min-width:0"><div class="sub" style="letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--purple-hi)">Next game</div><div class="t">'+(ng.ha==='Away'?'@ ':'vs ')+esc(ng.opponent||'Opponent TBD')+'</div>'+
-      (isHosted(ng)?'<div style="margin-top:6px">'+hostPill(ng)+' <span class="sub">'+(hostStatus(ng).done?'Ice and refs are covered.':'Still to do: '+esc(hostStatus(ng).todo.join(', ')))+'</span></div>':'')+'<div class="facts"><span>Puck drop <b>'+(ftime(ng.time)||'TBD')+'</b></span><span>Rink <b>'+esc(ng.rink||'TBD')+'</b></span><span>Refs <b>'+(refs.length?esc(refs.map(function(r){return r.name}).join(', ')):'Not assigned')+'</b></span><span>Beer <b>'+(beer.length?esc(beer.map(function(b){return b.bringer}).join(', ')):'Nobody yet')+'</b></span></div></div></div>';
+      '<div style="min-width:0"><div class="sub" style="letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--purple-hi)">Next game · '+(home?'Home':'Away')+'</div><div class="t">'+(home?'vs ':'@ ')+esc(ng.opponent||'Opponent TBD')+'</div><div class="facts">'+facts.join('')+'</div></div></div>';
   } else h+=E('No upcoming games','Add games on the Schedule tab and the next one shows up here.');
-  var owed=sum(data.roster,owedBy),paid=sum(data.roster,paidBy),iceCost=sum(data.ice,'cost')+hostedIcePlanned(),iceP=AUTO.Ice(),refFee=sum(data.refs,refOwed),refP=sum(data.refs,'amountPaid'),cash=cashOnHand();
+  // to do: the few things that need someone to act, each linking to the tab that handles it
+  var todo=[],nextHome=up.filter(isHosted);
+  nextHome.slice(0,2).forEach(function(g){var st=hostStatus(g);if(st.todo.length)todo.push({text:fdate(g.date)+' home game: '+st.todo.map(function(t,i){return i?t.charAt(0).toLowerCase()+t.slice(1):t}).join(', '),tab:'refs'})});
+  var unbooked=up.filter(function(g){return !String(g.rink||'').trim()});
+  if(unbooked.length)todo.push({text:'Book '+unbooked.length+' game'+(unbooked.length>1?'s':'')+' still to be scheduled ('+unbooked.map(function(g){return fdate(g.date)}).join(', ')+')',tab:'schedule'});
+  var owing=data.roster.filter(function(p){return owedBy(p)-paidBy(p)>0}),owingAmt=round2(sum(owing,function(p){return owedBy(p)-paidBy(p)}));
+  if(owing.length)todo.push({text:owing.length+' player'+(owing.length>1?'s':'')+' still owe fees ('+money(owingAmt)+')',tab:'payments'});
+  var ob=owedBackByPerson(false).filter(function(p){return p.total>0});
+  ob.forEach(function(p){todo.push({text:'Pay back '+p.who+' '+money(p.total),tab:'owed'})});
+  h+='<div class="panel"><h3>To do</h3>'+(todo.length?'<div class="list">'+todo.slice(0,7).map(function(t){return '<div class="li"><span class="l">'+esc(t.text)+'</span><button class="btn sm" data-act="tab" data-tab="'+t.tab+'">Open</button></div>'}).join('')+'</div>'+(todo.length>7?'<p class="sub" style="margin:8px 0 0">+'+(todo.length-7)+' more on the other tabs.</p>':''):'<p class="sub">Nothing needs doing right now.</p>')+'</div>';
+  // money at a glance
+  var fi=feeInfo(),owed=sum(data.roster,owedBy),paid=sum(data.roster,paidBy),obTotal=round2(sum(ob,'total'));
   h+='<div class="tiles">'+
-    tile('Player dues collected',money(paid),'of '+money(owed)+' owed',pct(paid,owed),paid>=owed&&owed>0)+
-    tile('Ice paid',money(iceP),'of '+money(iceCost)+' expected',pct(iceP,iceCost),iceP>=iceCost&&iceCost>0)+
-    tile('Refs paid',money(refP),refFee>refP?money(refFee-refP)+' still owed':'All officials paid',pct(refP,refFee),refP>=refFee&&refFee>0)+
-    tile('Team balance',money(cash.net),money(cash.i)+' in · '+money(cash.e)+' out')+
+    tile('Fees collected',money(paid),'of '+money(owed)+' · full time '+money(fi.ftFee)+', part time '+money(fi.ptFee),pct(paid,owed),paid>=owed&&owed>0)+
+    tile('Owed back',money(obTotal),ob.length?ob.map(function(p){return esc(p.who)}).join(', '):'Nobody is out of pocket')+
+    tile('Season budget',money(Math.max(0,fi.need)),'Ice, refs, practices and gear')+
   '</div>';
-  h+=hostPanel(5);
-  var owing=data.roster.map(function(p){return {p:p,b:owedBy(p)-paidBy(p)}}).filter(function(x){return x.b>0}).sort(function(a,b){return b.b-a.b});
-  h+='<div class="grid2"><div class="panel"><h3>Still owing</h3>'+(owing.length?'<div class="list">'+owing.slice(0,10).map(function(x){return '<div class="li"><div class="l">'+(x.p.number?'<span class="jersey">'+esc(x.p.number)+'</span> ':'')+esc(x.p.name)+'</div><b class="n">'+money(x.b)+'</b></div>'}).join('')+'</div>'+(owing.length>10?'<p class="sub">+'+(owing.length-10)+' more on Player Payments</p>':''):(data.roster.length?'<p class="sub">Everyone is paid up.</p>':'<p class="sub">Add your roster and season dues to track who owes.</p>'))+'</div>';
-  var ob=owedBackByPerson(false).filter(function(p){return p.total>0||p.items.some(function(x){return x.noCost})});
-  h+='<div class="panel"><h3>Owed back</h3>'+(ob.length?'<div class="list">'+ob.map(function(p){return '<div class="li"><div class="l">'+esc(p.who)+'<div class="sub">'+p.items.length+' item'+(p.items.length>1?'s':'')+''+'</div></div><b>'+money(p.total)+'</b></div>'}).join('')+'</div><p class="sub" style="margin:8px 0 0">Details on the Owed Back tab.</p>':'<p class="sub">Nobody is out of pocket.</p>')+'</div>';
-  h+='<div class="panel"><h3>Coming up</h3>'+(up.length?'<div class="list">'+up.slice(0,6).map(function(g){return '<div class="li"><div class="l"><b>'+esc(fdate(g.date))+'</b> <span class="sub">'+esc(ftime(g.time))+'</span><div class="sub">'+(g.ha==='Away'?'@ ':'vs ')+esc(g.opponent||'TBD')+' · '+esc(g.rink||'Rink TBD')+'</div></div></div>'}).join('')+'</div>':'<p class="sub">Nothing scheduled yet.</p>')+'</div></div>';
+  // coming up
+  h+='<div class="panel"><h3>Coming up</h3>'+(up.length>1?'<div class="list">'+up.slice(1,6).map(function(g){var home=isHosted(g);return '<div class="li"><div class="l"><b>'+esc(fdate(g.date))+'</b> <span class="sub">'+esc(ftime(g.time))+'</span><div class="sub">'+(g.rink?(home?'vs ':'@ ')+esc(g.opponent||'TBD')+' · '+esc(g.rink):'Still to be scheduled')+'</div></div>'+(g.rink?'<span class="pill '+(home?'pu':'mute')+'">'+(home?'Home':'Away')+'</span>':'<span class="pill warn">TBD</span>')+'</div>'}).join('')+'</div><p class="sub" style="margin:8px 0 0">Full list on the Schedule tab.</p>':'<p class="sub">Nothing else scheduled yet.</p>')+'</div>';
   return h;
 }
 
