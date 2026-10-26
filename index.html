@@ -571,16 +571,32 @@ function vSubs(){
   return h;
 }
 
+function invoiceOf(g){var n=String(g.notes||'');if(/separate from invoice/i.test(n))return '';var m=n.match(/INV-\d+/);return m?m[0]:''}
 function vIce(){
-  var cost=sum(data.ice,'cost'),paid=sum(data.icePay,'amount');
-  var h=head('Ice Contracts','Contracted ice, what each slot costs, and every payment to the rinks.',addBtn('ice','Add contract')+addBtn('icePay','Log ice payment'));
-  h+='<div class="tiles">'+tile('Contracted',money(cost),sum(data.ice,'slots')+' ice times')+tile('Paid to rinks',money(paid),pct(paid,cost)+'% of contracts',pct(paid,cost),paid>=cost&&cost>0)+tile('Balance owing',money(Math.max(0,cost-paid)),'')+'</div>';
-  if(!data.ice.length)return h+E('No ice contracts yet','Add each rink contract with its total cost, then log payments against it.');
-  h+='<div class="panel"><h3>Contracts</h3><div class="tw"><table><thead><tr><th>Rink</th><th>Dates</th><th class="n">Ice times</th><th class="n">Per ice</th><th class="n">Cost</th><th class="n">Paid</th><th>Status</th></tr></thead><tbody>';
-  data.ice.forEach(function(c){var p=icePaid(c),bal=num(c.cost)-p;h+=row('ice',c.id,'<td><b>'+esc(c.rink)+'</b>'+(c.label?'<div class="sub">'+esc(c.label)+'</div>':'')+(c.contact?'<div class="sub">Contact: '+esc(c.contact)+'</div>':'')+'</td><td class="nw">'+(c.start?esc(fdate(c.start))+' – '+esc(fdate(c.end)):'<span class="sub">—</span>')+'</td><td class="n">'+esc(c.slots||'')+'</td><td class="n">'+(num(c.slots)>0?money(num(c.cost)/num(c.slots)):'')+'</td><td class="n">'+money(c.cost)+'</td><td class="n">'+money(p)+'</td><td>'+(num(c.cost)<=0?'<span class="pill mute">No cost</span>':bal<=0?'<span class="pill ok">Paid</span>':p>0?'<span class="pill warn">'+money(bal)+' left</span>':'<span class="pill bad">Unpaid</span>')+'</td>')});
-  h+='</tbody></table></div></div>';
-  var ps=data.icePay.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'')});
-  if(ps.length)h+='<div class="panel"><h3>Ice payments</h3><div class="tw"><table><thead><tr><th>Date</th><th>Contract</th><th>Paid by</th><th>Method</th><th class="n">Amount</th></tr></thead><tbody>'+ps.map(function(x){var c=byId('ice',x.contractId);return row('icePay',x.id,'<td class="nw">'+esc(fdate(x.date))+'</td><td>'+esc(c?c.rink+(c.label?' — '+c.label:''):'Removed contract')+(x.note?'<div class="sub">'+esc(x.note)+'</div>':'')+'</td><td>'+esc(x.paidBy||'')+'</td><td>'+esc(x.method||'')+'</td><td class="n"><b>'+money(x.amount)+'</b></td>')}).join('')+'</tbody></table></div></div>';
+  var slots=gamesSorted().filter(iceCharged),slotCost=round2(sum(slots,iceCostFor)),paidSlots=slots.filter(function(g){return g.icePaid});
+  var cCost=sum(data.ice,'cost'),cPaid=sum(data.icePay,'amount');
+  var owed=round2(sum(paidSlots.filter(function(g){return !teamPaid(g.icePaidBy)&&!g.iceReimbursed}),iceCostFor));
+  var payers={};paidSlots.forEach(function(g){var k=teamPaid(g.icePaidBy)?'The team':g.icePaidBy.trim();payers[k]=round2((payers[k]||0)+iceCostFor(g))});
+  var xg=extraGames(),xi=extraIcePlanned(),pl=practicePlan(),pp=practicePlanned();
+  var h=head('Ice','Every ice slot we pay for: our home games at '+esc(hostRinkList().map(function(r){return r.name}).join(' and '))+', plus anything still to book.',addBtn('ice','Add contract')+addBtn('icePay','Log contract payment'));
+  h+='<div class="tiles">'+
+    tile('Ice booked',money(slotCost+cCost),slots.length+' game slot'+(slots.length===1?'':'s')+(data.ice.length?' + '+data.ice.length+' contract'+(data.ice.length>1?'s':''):''))+
+    tile('Paid',money(round2(sum(paidSlots,iceCostFor))+cPaid),Object.keys(payers).map(function(k){return esc(k)+' '+money(payers[k])}).join(' · ')||'Nothing paid yet',pct(sum(paidSlots,iceCostFor)+cPaid,slotCost+cCost),sum(paidSlots,iceCostFor)+cPaid>=slotCost+cCost&&slotCost+cCost>0)+
+    tile('Owed back for ice',money(owed),owed?'Until the team pays them back':'Nobody is owed for ice')+
+    tile('Still to book',money(round2(xi+pp)),(xg?xg+' home game'+(xg>1?'s':''):'')+(xg&&pp?' + ':'')+(pp?sum(pl,'n')+' practices':'')||'Nothing planned')+'</div>';
+  // game ice
+  h+='<div class="panel"><h3>Game ice</h3>'+(slots.length?'<div class="tw"><table><thead><tr><th>Date</th><th>Game</th><th>Rink</th><th class="n">Cost</th><th>Paid by</th><th>Status</th></tr></thead><tbody>'+slots.map(function(g){
+      var st=g.status==='Cancelled'?'<span class="pill warn">Late cancel</span>':g.status==='Played'?'<span class="pill mute">Played</span>':'<span class="pill pu">Upcoming</span>';
+      var pay=g.icePaid?(teamPaid(g.icePaidBy)?'The team':esc(g.icePaidBy))+(teamPaid(g.icePaidBy)?'':g.iceReimbursed?' <span class="pill ok">Paid back</span>':' <span class="pill bad">Owed back</span>'):'<span class="pill bad">Not paid</span>';
+      return row('games',g.id,'<td class="nw"><b>'+esc(fdate(g.date))+'</b> <span class="sub">'+esc(ftime(g.time))+'</span></td><td>'+(g.opponent?'vs '+esc(g.opponent):'<span class="sub">Opponent TBD</span>')+'</td><td>'+esc(g.rink)+(invoiceOf(g)?'<div class="sub">Invoice '+esc(invoiceOf(g))+'</div>':'')+'</td><td class="n"><b>'+money(iceCostFor(g))+'</b><div class="sub">'+esc(iceCostNote(g))+'</div></td><td>'+pay+'</td><td>'+st+'</td>')}).join('')+
+    '<tr class="tot"><td colspan="3">Total</td><td class="n">'+money(slotCost)+'</td><td colspan="2"></td></tr></tbody></table></div>':'<p class="sub">No home games at our rinks yet.</p>')+'</div>';
+  // rates + still to book
+  h+='<div class="grid2"><div class="panel"><h3>Rates</h3><div class="list">'+hostRinkList().map(function(r){var base=round2(r.rate*num(data.settings.slotHours)),tax=round2(base*num(data.settings.gst)/100);return '<div class="li"><div class="l"><b>'+esc(r.name)+'</b><div class="sub">'+money(r.rate)+'/h × '+esc(data.settings.slotHours)+' h + '+esc(data.settings.gst)+'% GST</div></div><b>'+money(base+tax)+' a game</b></div>'}).join('')+'</div><p class="sub" style="margin:8px 0 0">Change rates in Season settings.</p></div>';
+  h+='<div class="panel"><h3>Still to book</h3>'+(xg||pp?'<div class="list">'+(xg?'<div class="li"><div class="l"><b>'+xg+' more home game'+(xg>1?'s':'')+'</b><div class="sub">Priced at '+esc(extraRink()?extraRink().name:'')+', '+money(extraIcePer())+' each</div></div><b>'+money(xi)+'</b></div>':'')+pl.map(function(x){return '<div class="li"><div class="l"><b>'+x.n+' practice'+(x.n>1?'s':'')+' at '+esc(x.rink)+'</b><div class="sub">'+esc(data.settings.practiceHours)+' h × '+money(x.rate)+'/h + GST = '+money(x.each)+' each</div></div><b>'+money(x.total)+'</b></div>'}).join('')+'</div><p class="sub" style="margin:8px 0 0">These are budget estimates until the ice is booked.</p>':'<p class="sub">Nothing else planned.</p>')+'</div></div>';
+  // separate contracts, only when there are any
+  if(data.ice.length){
+    h+='<div class="panel"><h3>Other ice contracts</h3><div class="tw"><table><thead><tr><th>Rink</th><th>Dates</th><th class="n">Ice times</th><th class="n">Cost</th><th class="n">Paid</th><th>Status</th></tr></thead><tbody>'+data.ice.map(function(c){var p=icePaid(c),bal=num(c.cost)-p;return row('ice',c.id,'<td><b>'+esc(c.rink)+'</b>'+(c.label?'<div class="sub">'+esc(c.label)+'</div>':'')+'</td><td class="nw">'+(c.start?esc(fdate(c.start))+' – '+esc(fdate(c.end)):'')+'</td><td class="n">'+esc(c.slots||'')+'</td><td class="n">'+money(c.cost)+'</td><td class="n">'+money(p)+'</td><td>'+(bal<=0?'<span class="pill ok">Paid</span>':'<span class="pill warn">'+money(bal)+' left</span>')+'</td>')}).join('')+'</tbody></table></div></div>';
+  }
   return h;
 }
 
