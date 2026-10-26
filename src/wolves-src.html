@@ -434,16 +434,7 @@ function vOverview(){
     h+='<div class="next"><div class="datebox">'+(d?'<div class="m">'+MON[d.getMonth()]+'</div><div class="d">'+d.getDate()+'</div><div class="w">'+DOW[d.getDay()]+'</div>':'<div class="d">TBD</div>')+'</div>'+
       '<div style="min-width:0"><div class="sub" style="letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--purple-hi)">Next game · '+(home?'Home':'Away')+'</div><div class="t">'+(home?'vs ':'@ ')+esc(ng.opponent||'Opponent TBD')+'</div><div class="facts">'+facts.join('')+'</div></div>'+crest(ng.opponent,76)+'</div>';
   } else h+=E('No upcoming games','Add games on the Schedule tab and the next one shows up here.');
-  // to do: the few things that need someone to act, each linking to the tab that handles it
-  var todo=[],nextHome=up.filter(isHosted);
-  nextHome.slice(0,2).forEach(function(g){var st=hostStatus(g);if(st.todo.length)todo.push({text:fdate(g.date)+' home game: '+st.todo.map(function(t,i){return i?t.charAt(0).toLowerCase()+t.slice(1):t}).join(', '),tab:'refs'})});
-  var unbooked=up.filter(function(g){return !String(g.rink||'').trim()});
-  if(unbooked.length)todo.push({text:'Book '+unbooked.length+' game'+(unbooked.length>1?'s':'')+' still to be scheduled ('+unbooked.map(function(g){return fdate(g.date)}).join(', ')+')',tab:'schedule'});
-  var owing=data.roster.filter(function(p){return owedBy(p)-paidBy(p)>0}),owingAmt=round2(sum(owing,function(p){return owedBy(p)-paidBy(p)}));
-  if(owing.length)todo.push({text:owing.length+' player'+(owing.length>1?'s':'')+' still owe fees ('+money(owingAmt)+')',tab:'payments'});
   var ob=owedBackByPerson(false).filter(function(p){return p.total>0});
-  ob.forEach(function(p){todo.push({text:'Pay back '+p.who+' '+money(p.total),tab:'owed'})});
-  h+='<div class="panel"><h3>To do</h3>'+(todo.length?'<div class="list">'+todo.slice(0,7).map(function(t){return '<div class="li"><span class="l">'+esc(t.text)+'</span><button class="btn sm" data-act="tab" data-tab="'+t.tab+'">Open</button></div>'}).join('')+'</div>'+(todo.length>7?'<p class="sub" style="margin:8px 0 0">+'+(todo.length-7)+' more on the other tabs.</p>':''):'<p class="sub">Nothing needs doing right now.</p>')+'</div>';
   // money at a glance
   var fi=feeInfo(),owed=sum(data.roster,owedBy),paid=sum(data.roster,paidBy),obTotal=round2(sum(ob,'total'));
   h+='<div class="tiles">'+
