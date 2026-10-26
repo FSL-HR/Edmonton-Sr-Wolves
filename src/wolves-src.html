@@ -680,9 +680,9 @@ function render(){
   if(tab==='documents'&&!(canEditNow()&&dbNS))tab='overview';
   var tabs=canEditNow()&&dbNS?TABS.concat([['documents','Documents']]):TABS;
   var h='<header class="crest"><div class="wrap"><img src="'+LOGO+'" alt="Edmonton Sr Wolves crest"><div class="grow"><h1>Edmonton <span>Sr</span> Wolves</h1><div class="meta"><span class="chip">Season <b>'+esc(data.settings.season||'')+'</b></span>'+(data.settings.league?'<span class="chip">'+esc(data.settings.league)+'</span>':'')+'</div></div>'+
-    (editor?'<div class="modebar">'+(window.WOLVES_HOST&&!preview?'<span class="chip" id="savestate">'+(saving||dirty?'Saving…':'All changes saved')+'</span>':'')+(preview?'<button class="btn sm" data-act="preview">Back to editing</button>':'<button class="btn sm" data-act="settings">Season settings</button><button class="btn sm" data-act="preview">Preview as team</button>')+'</div>':'')+'</div></header>';
+    (editor?'<div class="modebar">'+(window.WOLVES_HOST&&!preview?'<span class="chip" id="savestate">'+(saving||dirty?'Saving…':'All changes saved')+'</span><button class="btn sm" data-act="backup">Backup</button><button class="btn sm" data-act="restore">Restore</button>':'')+(preview?'<button class="btn sm" data-act="preview">Back to editing</button>':'<button class="btn sm" data-act="settings">Season settings</button><button class="btn sm" data-act="preview">Preview as team</button>')+'</div>':'')+'</div></header>';
   h+='<nav class="rail" aria-label="Sections"><div class="wrap" role="tablist">'+tabs.map(function(t){return '<button class="tab" role="tab" data-act="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+'</button>'}).join('')+'</div></nav>';
-  h+='<main><div class="wrap">'+VIEWS[tab]()+'<p class="foot">'+(editor?(preview?'Previewing what the team sees.':(window.WOLVES_HOST?'Changes you save are shared with everyone who has the passcode.':'You can edit. Everyone else with the link sees a read-only view.')):'Read-only team view.')+'</p></div></main>';
+  h+='<main><div class="wrap">'+VIEWS[tab]()+'<p class="foot">'+(editor?(preview?'Previewing what the team sees.':(window.WOLVES_HOST?'Changes you save are shared with everyone who has the passcode.'+(window.WOLVES_HOST.build?' Version '+window.WOLVES_HOST.build+'.':''):'You can edit. Everyone else with the link sees a read-only view.')):'Read-only team view.')+'</p></div></main>';
   if(editor&&dirty&&!window.WOLVES_HOST)h+='<div class="savebar"><div class="wrap"><div class="msg"><b>'+dirty+' unsaved change'+(dirty>1?'s':'')+'.</b> The team sees them once you save.</div><button class="btn sm" data-act="discard">Discard</button><button class="btn pri" data-act="saveall" id="savebtn">Save &amp; share</button></div></div>';
   app.innerHTML=h+datalists();
   if(modal)app.insertAdjacentHTML('beforeend',modal.html);
@@ -763,6 +763,27 @@ function submitPayRefs(){
   if(!n){document.getElementById('ferr').textContent='Tick at least one ref.';return}
   var who=rosterByName(payer);modal=null;changed();
   toast(money(total)+' paid by '+payer+(who&&rosterType(who)!=='Coach'?', taken off what they owe.':', added to Owed Back.')+' Press Save & share.');
+}
+/* ---------- backups (hosted copy): download the whole team file, or load one back ---------- */
+function downloadBackup(){
+  var blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='wolves-backup-'+todayStr()+'-v'+(data.rev||0)+'.json';document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);toast('Backup downloaded ('+a.download+').');
+}
+var pendingRestore=null,restoreInput=document.createElement('input');restoreInput.type='file';restoreInput.accept='.json,application/json';restoreInput.hidden=true;document.body.appendChild(restoreInput);
+restoreInput.addEventListener('change',function(){
+  var file=restoreInput.files&&restoreInput.files[0];restoreInput.value='';if(!file)return;
+  file.text().then(function(t){
+    var d;try{d=JSON.parse(t)}catch(e){return toast('That file is not a Wolves backup.')}
+    if(!d||!Array.isArray(d.roster)||!Array.isArray(d.games))return toast('That file is not a Wolves backup.');
+    pendingRestore=d;
+    modal={c:'restore',html:'<div class="scrim" data-act="scrim"><div class="modal"><h3>Restore this backup?</h3><p>'+esc(file.name)+'</p><p class="sub">Saved '+esc(d.updated?new Date(d.updated).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'}):'(date unknown)')+' · '+d.roster.length+' people · '+d.games.length+' games · '+((d.refs||[]).length)+' ref assignments</p><p>This replaces everything on the dashboard, for everyone, with the backup. Download a backup of the current version first if you might want it back.</p><div class="row"><button class="btn sm" data-act="backup">Back up current first</button><span class="sp"></span><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="restoreok">Restore</button></div></div></div>'};
+    render();
+  });
+});
+function doRestore(){
+  if(!pendingRestore)return;var keepRev=data.rev;data=pendingRestore;pendingRestore=null;data.rev=keepRev;prep();
+  data.games.forEach(syncHomeAway);modal=null;changed();toast('Backup restored.');
 }
 function openBulk(){
   modal={c:'bulk',html:'<div class="scrim" data-act="scrim"><form class="modal" id="bform"><h3>Paste players</h3><div class="fld wide"><label for="bulk">One player per line</label><textarea id="bulk" style="min-height:180px" placeholder="Name, Jersey #, Position, Phone, Email, Type"></textarea><div class="hint">Columns: Name, Jersey #, Position (e.g. LW, D, G), Phone, Email, Type (Full time, Part time or Sub; blank means full time). Commas or tabs both work, so you can paste straight from a spreadsheet.</div></div><div class="row"><span class="sp"></span><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn pri">Add players</button></div></form></div>'};
@@ -1138,6 +1159,9 @@ document.addEventListener('click',function(e){
       case 'assignref':return openForm('refs',null,{gameId:a.dataset.game,role:'Referee'});
       case 'editgame':return openForm('games',a.dataset.game);
       case 'payrefs':return openPayRefs(a.dataset.game);
+      case 'backup':return downloadBackup();
+      case 'restore':return restoreInput.click();
+      case 'restoreok':return doRestore();
       case 'quickref':var qg=byId('games',a.dataset.game);if(!qg)return;if(data.refs.filter(function(r){return r.gameId===qg.id}).length>=refsPerGame())return toast('This game already has '+refsPerGame()+' refs.');
         data.refs.push({id:uid(),gameId:qg.id,name:a.dataset.name,role:'Referee',fee:'',mileage:'',insured:false,amountPaid:'',paidBy:'',paidDate:'',method:'',reimbursed:false});changed();return toast(a.dataset.name+' assigned to '+fdate(qg.date)+'.');
       case 'icepaid':var ig=byId('games',a.dataset.game);if(ig){ig.icePaid=true;if(!String(ig.icePaidBy||'').trim()&&data.settings.hostIcePaidBy)ig.icePaidBy=data.settings.hostIcePaidBy;changed();toast('Ice marked paid'+(ig.icePaidBy?' by '+ig.icePaidBy:'')+'. Press Save & share.')}return;

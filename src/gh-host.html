@@ -46,7 +46,26 @@ window.WOLVES_HOST=(function(){
     if(v===CODE)unlock();else document.getElementById('wolves-gate-err').textContent='That passcode is not right.';
   });
   try{if(sessionStorage.getItem(KEY)==='1')setTimeout(unlock,0)}catch(e){}
+  /* outdated-version banner: every few minutes (and when the tab comes back) fetch the live page and compare build stamps */
+  var BUILD='__BUILD__';
+  function showUpdateBanner(){
+    if(document.getElementById('wolves-update'))return;
+    var d=document.createElement('div');d.id='wolves-update';d.setAttribute('role','alert');
+    d.style.cssText='position:fixed;left:0;right:0;top:0;z-index:2147483646;background:#f2b84b;color:#0b0a0f;font:600 14px Barlow,system-ui,sans-serif;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))';
+    d.innerHTML='<span>A newer version of the dashboard is available.</span><button type="button" style="border:0;border-radius:8px;background:#0b0a0f;color:#fff;font:700 14px Barlow,system-ui,sans-serif;padding:7px 14px;cursor:pointer">Reload now</button>';
+    d.querySelector('button').addEventListener('click',function(){location.href=location.pathname+'?v='+Date.now()+location.hash});
+    document.body.appendChild(d);
+  }
+  function checkVersion(){
+    fetch(location.pathname+'?check='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+      var m=t&&t.match(/var BUILD='([^']+)'/);if(m&&m[1]!==BUILD&&m[1]!=='__'+'BUILD__')showUpdateBanner();
+    }).catch(function(){});
+  }
+  setInterval(checkVersion,3*60*1000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)checkVersion()});
+  setTimeout(checkVersion,20000);
   return {
+    build:BUILD,
     onData:function(fn){onDataCb=fn},
     onUnlock:function(fn){onUnlockCb=fn},
     reload:function(){if(onDataCb&&last)onDataCb(JSON.parse(JSON.stringify(last)),true)},
