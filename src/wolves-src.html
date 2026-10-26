@@ -402,7 +402,7 @@ function pct(a,b){return b>0?Math.round(a/b*100):0}
 function payStatus(owed,paid){if(owed<=0&&paid<=0)return '<span class="pill mute">No dues set</span>';if(paid>=owed)return '<span class="pill ok">Paid</span>';if(paid>0)return '<span class="pill warn">Partial</span>';return '<span class="pill bad">Owing</span>'}
 
 function vOverview(){
-  var up=gamesSorted().filter(function(g){return g.status!=='Cancelled'&&g.status!=='Final'&&(!g.date||g.date>=todayStr())});
+  var up=gamesSorted().filter(function(g){return g.status!=='Cancelled'&&g.status!=='Played'&&(!g.date||g.date>=todayStr())});
   var ng=up[0], h='';
   h+=head('Overview',data.updated?'Last updated '+esc(new Date(data.updated).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'})):'');
   if(ng){
@@ -428,7 +428,7 @@ function vOverview(){
 }
 
 function hostPanel(limit){
-  var hg=gamesSorted().filter(function(g){return isHosted(g)&&g.status!=='Final'&&(!g.date||g.date>=todayStr())});
+  var hg=gamesSorted().filter(function(g){return isHosted(g)&&((g.status!=='Played'&&(!g.date||g.date>=todayStr()))||hostStatus(g).unpaid.length>0)});
   if(!hg.length)return '';
   return '<div class="panel"><h3>Games we host</h3><p class="sub" style="margin:-4px 0 10px">At these rinks we pay the ice and assign and pay the refs. Ice: '+esc(hostRinkList().map(function(h){return h.name+' '+money(h.rate)+'/h'}).join(', '))+', '+esc(data.settings.slotHours)+' h slots, plus '+esc(data.settings.gst)+'% GST.</p><div class="tw"><table><thead><tr><th>Game</th><th>Ice</th><th>Refs</th><th>Still to do</th><th></th></tr></thead><tbody>'+
     hg.slice(0,limit||99).map(function(g){var st=hostStatus(g);
@@ -436,7 +436,7 @@ function hostPanel(limit){
         '<td class="nw">'+(iceCostFor(g)>0?'<b>'+money(iceCostFor(g))+'</b> '+(g.icePaid?'<span class="pill ok">Paid</span>':'<span class="pill bad">Unpaid</span>')+'<div class="sub">'+esc(iceCostNote(g))+'</div>':'<span class="pill warn">No rate for this rink</span>')+'</td>'+
         '<td>'+(st.refs.length?esc(st.refs.map(function(r){return r.name}).join(', '))+(st.unpaid.length?' <span class="pill warn">'+st.unpaid.length+' unpaid</span>':' <span class="pill ok">Paid</span>'):'<span class="pill bad">None assigned</span>')+'</td>'+
         '<td>'+(st.done?'<span class="pill ok">All set</span>':esc(st.todo.join(' · ')))+'</td>'+
-        '<td class="nw"><div class="acts ed-only"><button class="btn sm" data-act="assignref" data-game="'+g.id+'">Assign ref</button><button class="btn sm" data-act="editgame" data-game="'+g.id+'">Mark ice paid</button></div></td></tr>'}).join('')+'</tbody></table></div></div>';
+        '<td class="nw"><div class="acts ed-only">'+(st.refs.length<refsPerGame()?'<button class="btn sm" data-act="assignref" data-game="'+g.id+'">Assign ref</button>':'')+(st.unpaid.length?'<button class="btn sm pri" data-act="payrefs" data-game="'+g.id+'">Pay refs</button>':'')+(g.icePaid?'':'<button class="btn sm" data-act="icepaid" data-game="'+g.id+'">Mark ice paid</button>')+'</div></td></tr>'}).join('')+'</tbody></table></div></div>';
 }
 function vSchedule(){
   var gs=gamesSorted(),h=head('Schedule',gs.length?gs.length+' games':'Every game, ref crew and whose turn it is for beer.',addBtn('games','Add game'));
@@ -720,6 +720,26 @@ function removeRecord(c,id){
   if(c==='ice')data.icePay=data.icePay.filter(function(x){return x.contractId!==id});
   if(c==='roster')data.subUses=data.subUses.filter(function(x){return x.playerId!==id});
 }
+function openPayRefs(gameId){
+  var g=byId('games',gameId),rs=data.refs.filter(function(r){return r.gameId===gameId});if(!g)return;
+  if(!rs.length){toast('Assign the refs first.');return}
+  var payers=data.roster.filter(function(p){var t=rosterType(p);return t==='Full time'||t==='Part time'}).map(function(p){return p.name});
+  modal={c:'payrefs',game:gameId,html:'<div class="scrim" data-act="scrim"><form class="modal" id="rpform" novalidate><h3>Pay refs</h3><p class="sub" style="margin:-6px 0 0">'+esc(gameLabel(g))+' · '+esc(g.rink||'')+'</p>'+
+    '<div class="list">'+rs.map(function(r){var ow=refOwed(r),paid=num(r.amountPaid)>=ow&&ow>0;return '<label class="li" style="cursor:pointer"><span class="l"><input type="checkbox" id="rp_'+esc(r.id)+'" '+(paid?'':'checked')+' style="width:18px;height:18px;accent-color:var(--purple);margin-right:8px;vertical-align:-3px"><b>'+esc(r.name)+'</b><span class="sub"> · '+esc(refBreakdown(r))+'</span></span><b>'+(paid?'<span class="pill ok">Paid</span>':money(ow))+'</b></label>'}).join('')+'</div>'+
+    '<div class="fields"><div class="fld"><label for="rp_payer">Paid by *</label><input id="rp_payer" list="dl-rppayers" placeholder="Player who paid" value=""><datalist id="dl-rppayers">'+payers.map(function(n){return '<option value="'+esc(n)+'">'}).join('')+'</datalist><div class="hint">A player who pays gets it taken off what they owe.</div></div>'+
+    '<div class="fld"><label for="rp_date">Date paid</label><input id="rp_date" type="date" value="'+esc(g.date&&g.date<=todayStr()?g.date:todayStr())+'"></div>'+
+    '<div class="fld"><label for="rp_method">Method</label><select id="rp_method"><option value="">—</option>'+METHODS.map(function(m){return '<option'+(m==='Cash'?' selected':'')+'>'+esc(m)+'</option>'}).join('')+'</select></div></div>'+
+    '<div class="err" id="ferr"></div><div class="row"><span class="sp"></span><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn pri">Save payment</button></div></form></div>'};
+  render();var p=document.getElementById('rp_payer');if(p)p.focus();
+}
+function submitPayRefs(){
+  var payer=document.getElementById('rp_payer').value.trim(),date=document.getElementById('rp_date').value,method=document.getElementById('rp_method').value;
+  if(!payer){document.getElementById('ferr').textContent='Say who paid the refs.';return}
+  var n=0,total=0;data.refs.filter(function(r){return r.gameId===modal.game}).forEach(function(r){var cb=document.getElementById('rp_'+r.id);if(cb&&cb.checked){r.amountPaid=String(refOwed(r));r.paidBy=payer;r.paidDate=date;r.method=method;r.reimbursed=false;n++;total+=refOwed(r)}});
+  if(!n){document.getElementById('ferr').textContent='Tick at least one ref.';return}
+  var who=rosterByName(payer);modal=null;changed();
+  toast(money(total)+' paid by '+payer+(who&&rosterType(who)!=='Coach'?', taken off what they owe.':', added to Owed Back.')+' Press Save & share.');
+}
 function openBulk(){
   modal={c:'bulk',html:'<div class="scrim" data-act="scrim"><form class="modal" id="bform"><h3>Paste players</h3><div class="fld wide"><label for="bulk">One player per line</label><textarea id="bulk" style="min-height:180px" placeholder="Name, Jersey #, Position, Phone, Email, Type"></textarea><div class="hint">Columns: Name, Jersey #, Position (e.g. LW, D, G), Phone, Email, Type (Full time, Part time or Sub; blank means full time). Commas or tabs both work, so you can paste straight from a spreadsheet.</div></div><div class="row"><span class="sp"></span><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn pri">Add players</button></div></form></div>'};
   render();document.getElementById('bulk').focus();
@@ -877,7 +897,7 @@ function overview(){
     counts:CNAMES.reduce(function(o,c){o[c]=data[c].length;return o},{}),documents:DOCS.length,unsavedChanges:dirty,
     nextGames:gamesSorted().filter(function(g){return g.date>=todayStr()&&g.status!=='Cancelled'}).slice(0,5).map(function(g){return {id:g.id,label:labelOf('games',g),rink:g.rink,weHost:isHosted(g)}}),
     owedBack:owedBackByPerson(false).map(function(p){return {who:p.who,total:p.total,items:p.items.map(function(x){return {kind:x.kind,id:x.id,what:x.what,amount:x.amount,costNotEntered:!!x.noCost}})}}),
-    hostedGamesToDo:gamesSorted().filter(function(g){return isHosted(g)&&g.status!=='Final'&&g.date>=todayStr()}).map(function(g){var st=hostStatus(g);return {id:g.id,label:labelOf('games',g),rink:g.rink,iceCost:iceCostFor(g),iceCostWorkedOut:iceCostNote(g),icePaid:!!g.icePaid,refsAssigned:st.refs.map(function(r){return {name:r.name,owed:refOwed(r),breakdown:refBreakdown(r),paid:num(r.amountPaid)}}),refsNeeded:refsPerGame(),stillToDo:st.todo}})};
+    hostedGamesToDo:gamesSorted().filter(function(g){return isHosted(g)&&g.status!=='Played'&&g.date>=todayStr()}).map(function(g){var st=hostStatus(g);return {id:g.id,label:labelOf('games',g),rink:g.rink,iceCost:iceCostFor(g),iceCostWorkedOut:iceCostNote(g),icePaid:!!g.icePaid,refsAssigned:st.refs.map(function(r){return {name:r.name,owed:refOwed(r),breakdown:refBreakdown(r),paid:num(r.amountPaid)}}),refsNeeded:refsPerGame(),stillToDo:st.todo}})};
 }
 function fit(o){var s=JSON.stringify(o);if(s.length<28000)return o;if(Array.isArray(o.records)){while(JSON.stringify(o).length>28000&&o.records.length>1)o.records.pop();o.note='List cut short. Use a query to narrow it.'}return o}
 function findRecords(c,q,limit){
@@ -1092,6 +1112,8 @@ document.addEventListener('click',function(e){
       case 'addsub':return openForm('roster',null,{status:'Sub'});
       case 'assignref':return openForm('refs',null,{gameId:a.dataset.game,role:'Referee'});
       case 'editgame':return openForm('games',a.dataset.game);
+      case 'payrefs':return openPayRefs(a.dataset.game);
+      case 'icepaid':var ig=byId('games',a.dataset.game);if(ig){ig.icePaid=true;if(!String(ig.icePaidBy||'').trim()&&data.settings.hostIcePaidBy)ig.icePaidBy=data.settings.hostIcePaidBy;changed();toast('Ice marked paid'+(ig.icePaidBy?' by '+ig.icePaidBy:'')+'. Press Save & share.')}return;
       case 'tkturn':var onG=data.tk.filter(function(x){return x.gameId===a.dataset.game}).map(function(x){return String(x.responsible||'').toLowerCase()});var tn=tkTurns().filter(function(t){return !t.next&&onG.indexOf(t.who.toLowerCase())<0})[0];return openForm('tk',null,{gameId:a.dataset.game,responsible:tn?tn.who:''});
       case 'beerturn':var nx=beerTurns().filter(function(t){return !t.next})[0];return openForm('beer',null,{gameId:a.dataset.game,bringer:nx?nx.who:''});
       case 'paidback':if(markPaidBack(a.dataset.kind,a.dataset.id,true)){changed();toast('Marked paid back.')}return;
@@ -1117,7 +1139,7 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape'&&ask.open)return closeAsk();
   if(e.key==='Enter'&&e.target.matches&&e.target.matches('[data-edit]')&&canEditNow()){var p=e.target.dataset.edit.split(':');openForm(p[0],p[1])}
 });
-document.addEventListener('submit',function(e){e.preventDefault();if(e.target.id==='mform')submitForm();else if(e.target.id==='bform')submitBulk()});
+document.addEventListener('submit',function(e){e.preventDefault();if(e.target.id==='mform')submitForm();else if(e.target.id==='bform')submitBulk();else if(e.target.id==='rpform')submitPayRefs()});
 window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(VIEWS[h]&&h!==tab)setTab(h)});
 
 /* ---------- boot ---------- */
