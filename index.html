@@ -70,6 +70,7 @@ h3{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.05e
 .team{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--ink)}
 .team .crest{margin:0;border-radius:10px}
 .team b{display:block;line-height:1.2}
+.btn:disabled{opacity:.4;cursor:default}
 .datebox{width:78px;text-align:center;border:1px solid var(--purple);border-radius:12px;padding:8px 4px;background:var(--ink)}
 .datebox .m{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--purple-hi);font-weight:700}
 .datebox .d{font-family:var(--display);font-weight:800;font-size:34px;line-height:1}
@@ -248,7 +249,7 @@ window.WOLVES_HOST=(function(){
   });
   try{if(sessionStorage.getItem(KEY)==='1')setTimeout(unlock,0)}catch(e){}
   /* outdated-version banner: every few minutes (and when the tab comes back) fetch the live page and compare build stamps */
-  var BUILD='2026-10-26 01:08 UTC';
+  var BUILD='2026-10-26 01:12 UTC';
   function showUpdateBanner(){
     if(document.getElementById('wolves-update'))return;
     var d=document.createElement('div');d.id='wolves-update';d.setAttribute('role','alert');
@@ -789,7 +790,7 @@ function render(){
   if(tab==='documents'&&!(canEditNow()&&dbNS))tab='overview';
   var tabs=canEditNow()&&dbNS?TABS.concat([['documents','Documents']]):TABS;
   var h='<header class="crest"><div class="wrap"><img src="'+LOGO+'" alt="Edmonton Sr Wolves crest"><div class="grow"><h1>Edmonton <span>Sr</span> Wolves</h1><div class="meta"><span class="chip">Season <b>'+esc(data.settings.season||'')+'</b></span>'+(data.settings.league?'<span class="chip">'+esc(data.settings.league)+'</span>':'')+'</div></div>'+
-    (editor?'<div class="modebar">'+(window.WOLVES_HOST&&!preview?'<span class="chip" id="savestate">'+(saving||dirty?'Saving…':'All changes saved')+'</span><button class="btn sm" data-act="backup">Backup</button><button class="btn sm" data-act="restore">Restore</button>':'')+(preview?'<button class="btn sm" data-act="preview">Back to editing</button>':'<button class="btn sm" data-act="settings">Season settings</button><button class="btn sm" data-act="preview">Preview as team</button>')+'</div>':'')+'</div></header>';
+    (editor?'<div class="modebar">'+(window.WOLVES_HOST&&!preview?'<span class="chip" id="savestate">'+(saving||dirty?'Saving…':'All changes saved')+'</span><button class="btn sm" data-act="undo" title="Undo the last change (Ctrl+Z)"'+(undoStack.length?'':' disabled')+'>↶ Undo</button><button class="btn sm" data-act="redo" title="Redo (Ctrl+Y)"'+(redoStack.length?'':' disabled')+'>↷ Redo</button><button class="btn sm" data-act="backup">Backup</button><button class="btn sm" data-act="restore">Restore</button>':'')+(preview?'<button class="btn sm" data-act="preview">Back to editing</button>':'<button class="btn sm" data-act="settings">Season settings</button><button class="btn sm" data-act="preview">Preview as team</button>')+'</div>':'')+'</div></header>';
   h+='<nav class="rail" aria-label="Sections"><div class="wrap" role="tablist">'+tabs.map(function(t){return '<button class="tab" role="tab" data-act="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+'</button>'}).join('')+'</div></nav>';
   h+='<main><div class="wrap">'+VIEWS[tab]()+'<p class="foot">'+(editor?(preview?'Previewing what the team sees.':(window.WOLVES_HOST?'Changes you save are shared with everyone who has the passcode.'+(window.WOLVES_HOST.build?' Version '+window.WOLVES_HOST.build+'.':''):'You can edit. Everyone else with the link sees a read-only view.')):'Read-only team view.')+'</p></div></main>';
   if(editor&&dirty&&!window.WOLVES_HOST)h+='<div class="savebar"><div class="wrap"><div class="msg"><b>'+dirty+' unsaved change'+(dirty>1?'s':'')+'.</b> The team sees them once you save.</div><button class="btn sm" data-act="discard">Discard</button><button class="btn pri" data-act="saveall" id="savebtn">Save &amp; share</button></div></div>';
@@ -825,7 +826,17 @@ function openForm(c,id,preset){
   var first=document.querySelector('#mform input,#mform select,#mform textarea');if(first)first.focus();
 }
 function closeModal(){modal=null;render()}
-function changed(){dirty++;lsSet('wolves-draft',JSON.stringify({baseRev:baseRev,data:data}));render();if(window.WOLVES_HOST&&editor)scheduleSave()}
+/* undo / redo: snapshots of the data, taken on every change. Cleared when someone else's save arrives,
+   so an undo can never wipe out another person's work. */
+var undoStack=[],redoStack=[],snap=null,UNDO_MAX=50;
+function snapOf(){return JSON.stringify(Object.assign({},data,{rev:0,updated:''}))}
+function resetUndo(){undoStack=[];redoStack=[];snap=snapOf()}
+function rememberChange(){var s=snapOf();if(snap!==null&&s!==snap){undoStack.push(snap);if(undoStack.length>UNDO_MAX)undoStack.shift();redoStack=[]}snap=s}
+function applySnap(s){var rev=data.rev,upd=data.updated;data=JSON.parse(s);data.rev=rev;data.updated=upd;prep();snap=snapOf();modal=null;
+  dirty++;lsSet('wolves-draft',JSON.stringify({baseRev:baseRev,data:data}));render();if(window.WOLVES_HOST&&editor)scheduleSave()}
+function undo(){if(!undoStack.length)return toast('Nothing to undo.');redoStack.push(snap);applySnap(undoStack.pop());toast('Undone.')}
+function redo(){if(!redoStack.length)return toast('Nothing to redo.');undoStack.push(snap);applySnap(redoStack.pop());toast('Redone.')}
+function changed(){rememberChange();dirty++;lsSet('wolves-draft',JSON.stringify({baseRev:baseRev,data:data}));render();if(window.WOLVES_HOST&&editor)scheduleSave()}
 /* hosted copy: every change goes straight to the shared copy, a moment after the last click */
 var saveTimer=null,saveAgain=false;
 function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(function(){if(saving){saveAgain=true;return}saveAll()},400)}
@@ -1268,6 +1279,8 @@ document.addEventListener('click',function(e){
       case 'assignref':return openForm('refs',null,{gameId:a.dataset.game,role:'Referee'});
       case 'editgame':return openForm('games',a.dataset.game);
       case 'payrefs':return openPayRefs(a.dataset.game);
+      case 'undo':return undo();
+      case 'redo':return redo();
       case 'backup':return downloadBackup();
       case 'restore':return restoreInput.click();
       case 'restoreok':return doRestore();
@@ -1295,6 +1308,8 @@ document.addEventListener('click',function(e){
   if(r&&canEditNow()&&!e.target.closest('button')){var p=r.dataset.edit.split(':');openForm(p[0],p[1])}
 });
 document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&editor&&!modal&&!(e.target.matches&&e.target.matches('input,textarea,select,[contenteditable]'))){
+    var k=e.key.toLowerCase();if(k==='z'&&!e.shiftKey){e.preventDefault();return undo()}if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();return redo()}}
   if(e.key==='Escape'&&modal)return closeModal();
   if(e.key==='Escape'&&ask.open)return closeAsk();
   if(e.key==='Enter'&&e.target.matches&&e.target.matches('[data-edit]')&&canEditNow()){var p=e.target.dataset.edit.split(':');openForm(p[0],p[1])}
@@ -1313,12 +1328,12 @@ render();
       if(saving)return;
       if(dirty&&!force){toast('Someone else just saved. Save yours to keep your changes, or Discard to see theirs.');return}
       data=remote&&typeof remote==='object'?remote:{};prep();baseRev=data.rev||0;
-      data.games.forEach(syncHomeAway);data.games.forEach(applyHostIce);render();
+      data.games.forEach(syncHomeAway);data.games.forEach(applyHostIce);resetUndo();render();
     });
     H.onUnlock(function(){
       editor=true;artifactNS={publish:function(){return H.save(data,baseRev)}};
       try{var d=JSON.parse(lsGet('wolves-draft')||'null');if(d&&d.baseRev===baseRev&&d.data&&JSON.stringify(d.data)!==JSON.stringify(data)){data=d.data;dirty=1;setTimeout(function(){toast('Restored your unsaved changes.')},300)}else if(d)lsDel('wolves-draft')}catch(e){}
-      render();
+      resetUndo();render();
     });
     return;
   }
