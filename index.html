@@ -70,6 +70,8 @@ h3{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.05e
 .team{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--ink)}
 .team .crest{margin:0;border-radius:10px}
 .team b{display:block;line-height:1.2}
+.unx{border:1px solid var(--line);background:var(--ink);color:var(--muted);border-radius:999px;width:22px;height:22px;padding:0;margin:0 2px 0 5px;font:700 14px/1 system-ui,sans-serif;cursor:pointer;vertical-align:middle}
+.unx:hover,.unx:focus-visible{color:#fff;background:var(--bad);border-color:var(--bad)}
 .btn:disabled{opacity:.4;cursor:default}
 .datebox{width:78px;text-align:center;border:1px solid var(--purple);border-radius:12px;padding:8px 4px;background:var(--ink)}
 .datebox .m{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--purple-hi);font-weight:700}
@@ -249,7 +251,7 @@ window.WOLVES_HOST=(function(){
   });
   try{if(sessionStorage.getItem(KEY)==='1')setTimeout(unlock,0)}catch(e){}
   /* outdated-version banner: every few minutes (and when the tab comes back) fetch the live page and compare build stamps */
-  var BUILD='2026-10-26 01:12 UTC';
+  var BUILD='2026-10-26 01:15 UTC';
   function showUpdateBanner(){
     if(document.getElementById('wolves-update'))return;
     var d=document.createElement('div');d.id='wolves-update';d.setAttribute('role','alert');
@@ -541,6 +543,8 @@ function vOverview(){
   return h;
 }
 
+/* small × next to an assigned name: one tap takes them off the game (Undo puts them back) */
+function unassignBtn(c,id,name){return '<button class="unx ed-only" data-act="unassign" data-c="'+c+'" data-id="'+esc(id)+'" title="Take '+esc(name)+' off this game" aria-label="Take '+esc(name)+' off this game">×</button>'}
 function hostPanel(limit){
   var hg=gamesSorted().filter(function(g){return isHosted(g)&&((g.status!=='Played'&&(!g.date||g.date>=todayStr()))||hostStatus(g).unpaid.length>0)});
   if(!hg.length)return '';
@@ -548,7 +552,7 @@ function hostPanel(limit){
     hg.slice(0,limit||99).map(function(g){var st=hostStatus(g);
       return '<tr><td class="nw"><b>'+esc(fdate(g.date))+'</b> '+esc(ftime(g.time))+'<div class="sub">'+crest(g.opponent,20)+(g.ha==='Away'?'@ ':'vs ')+esc(g.opponent||'TBD')+' · '+esc(g.rink)+'</div></td>'+
         '<td class="nw">'+(iceCostFor(g)>0?'<b>'+money(iceCostFor(g))+'</b> '+(g.icePaid?'<span class="pill ok">Paid</span>':'<span class="pill bad">Unpaid</span>')+'<div class="sub">'+esc(iceCostNote(g))+'</div>':'<span class="pill warn">No rate for this rink</span>')+'</td>'+
-        '<td>'+(st.refs.length?esc(st.refs.map(function(r){return r.name}).join(', '))+(st.unpaid.length?' <span class="pill warn">'+st.unpaid.length+' unpaid</span>':' <span class="pill ok">Paid</span>'):'<span class="pill bad">None assigned</span>')+
+        '<td>'+(st.refs.length?st.refs.map(function(r){return esc(r.name)+(num(r.amountPaid)>0?'':unassignBtn('refs',r.id,r.name))}).join(', ')+(st.unpaid.length?' <span class="pill warn">'+st.unpaid.length+' unpaid</span>':' <span class="pill ok">Paid</span>'):'<span class="pill bad">None assigned</span>')+
           (st.refs.length<refsPerGame()?'<div class="acts ed-only" style="margin-top:6px">'+refBook().filter(function(b){return !st.refs.some(function(r){return refKey(r)===b.name.toLowerCase().replace(/\s+/g,' ')})}).slice(0,6).map(function(b){return '<button class="btn sm" data-act="quickref" data-game="'+g.id+'" data-name="'+esc(b.name)+'">+ '+esc(b.name)+'</button>'}).join('')+'</div>':'')+'</td>'+
         '<td>'+(st.done?'<span class="pill ok">All set</span>':esc(st.todo.join(' · ')))+'</td>'+
         '<td class="nw"><div class="acts ed-only">'+(st.refs.length<refsPerGame()?'<button class="btn sm" data-act="assignref" data-game="'+g.id+'">Assign ref</button>':'')+(st.unpaid.length?'<button class="btn sm pri" data-act="payrefs" data-game="'+g.id+'">Pay refs</button>':'')+(g.icePaid?'':'<button class="btn sm" data-act="icepaid" data-game="'+g.id+'">Mark ice paid</button>')+'</div></td></tr>'}).join('')+'</tbody></table></div></div>';
@@ -662,7 +666,7 @@ function vRefs(){
   var byPayer={};data.refs.forEach(function(r){if(num(r.amountPaid)>0){var k=r.paidBy||'Not recorded';byPayer[k]=(byPayer[k]||0)+num(r.amountPaid)}});
   h+='<div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))"><div class="panel" style="grid-column:span 2;min-width:0"><h3>Assignments</h3><div class="tw"><table><thead><tr><th>Game</th><th>Official</th><th>Role</th><th class="n">Owed</th><th class="n">Paid</th><th>Paid by</th><th>Status</th></tr></thead><tbody>';
   data.refs.slice().sort(function(a,b){var ga=byId('games',a.gameId)||{},gb=byId('games',b.gameId)||{};return ((ga.date||'')+(ga.time||'')).localeCompare((gb.date||'')+(gb.time||''))}).forEach(function(r){var ow=refOwed(r),st=ow<=0?'<span class="pill mute">No fee</span>':!refUnpaid(r)?'<span class="pill ok">Paid</span>':num(r.amountPaid)>0?'<span class="pill warn">Short '+money(ow-num(r.amountPaid))+'</span>':'<span class="pill bad">Unpaid</span>';
-    h+=row('refs',r.id,'<td class="nw">'+esc(gameLabel(byId('games',r.gameId)))+'</td><td><b>'+esc(r.name)+'</b>'+(refInsurance(r)?' <span class="pill pu">First game</span>':'')+'</td><td>'+esc(r.role||'')+'</td><td class="n"><b>'+money(refOwed(r))+'</b><div class="sub">'+esc(refBreakdown(r))+'</div></td><td class="n">'+money(r.amountPaid)+'</td><td>'+esc(r.paidBy||'')+(r.paidDate?'<div class="sub">'+esc(fdate(r.paidDate))+(r.method?' · '+esc(r.method):'')+'</div>':'')+'</td><td>'+st+'</td>')});
+    h+=row('refs',r.id,'<td class="nw">'+esc(gameLabel(byId('games',r.gameId)))+'</td><td class="nw"><b>'+esc(r.name)+'</b>'+(num(r.amountPaid)>0?'':unassignBtn('refs',r.id,r.name))+(refInsurance(r)?' <span class="pill pu">First game</span>':'')+'</td><td>'+esc(r.role||'')+'</td><td class="n"><b>'+money(refOwed(r))+'</b><div class="sub">'+esc(refBreakdown(r))+'</div></td><td class="n">'+money(r.amountPaid)+'</td><td>'+esc(r.paidBy||'')+(r.paidDate?'<div class="sub">'+esc(fdate(r.paidDate))+(r.method?' · '+esc(r.method):'')+'</div>':'')+'</td><td>'+st+'</td>')});
   h+='</tbody></table></div></div>';
   var ks=Object.keys(byPayer).sort(function(a,b){return byPayer[b]-byPayer[a]});
   var rb=refBook();
@@ -736,7 +740,7 @@ function vBeer(){
   var turns=beerTurns(),up=gamesSorted().filter(function(g){return g.status!=='Cancelled'&&g.date>=todayStr()}),queue=turns.filter(function(t){return !t.next});
   var qi=0;
   h+='<div class="grid2"><div class="panel"><h3>Upcoming games</h3>'+(up.length?'<div class="list">'+up.map(function(g){var bs=data.beer.filter(function(b){return b.gameId===g.id});
-      var who=bs.length?'<b>'+esc(bs.map(function(b){return b.bringer}).join(', '))+'</b>':(queue[qi]?'<span class="sub">Up next: '+esc(queue[qi++].who)+'</span>':'<span class="pill warn">Nobody yet</span>');
+      var who=bs.length?bs.map(function(b){return '<b>'+esc(b.bringer)+'</b>'+unassignBtn('beer',b.id,b.bringer)}).join(' '):(queue[qi]?'<span class="sub">Up next: '+esc(queue[qi++].who)+'</span>':'<span class="pill warn">Nobody yet</span>');
       return '<div class="li"><div class="l"><b>'+esc(fdate(g.date))+'</b> <span class="sub">'+esc(ftime(g.time))+'</span><div class="sub">'+crest(g.opponent,20)+(g.ha==='Away'?'@ ':'vs ')+esc(g.opponent||'TBD')+' · '+esc(g.rink||'Rink TBD')+'</div></div><div style="text-align:right">'+who+(bs.length?'':'<div><button class="btn sm ed-only" data-act="beerturn" data-game="'+g.id+'">Assign</button></div>')+'</div></div>'}).join('')+'</div>':'<p class="sub">No upcoming games.</p>')+'</div>';
   h+='<div class="panel"><h3>Turns so far</h3>'+(turns.length?'<div class="list">'+turns.map(function(t){return '<div class="li"><div class="l"><b>'+esc(t.who)+'</b><div class="sub">'+(t.last?'Last brought '+esc(fdate(t.last)):'Hasn\'t had a turn yet')+(t.next?' · next on '+esc(fdate(t.next)):'')+'</div></div><span class="pill '+(t.n?'mute':'warn')+'">'+t.n+' turn'+(t.n===1?'':'s')+'</span></div>'}).join('')+'</div>':'<p class="sub">Add players to the roster to start the rotation.</p>')+'</div></div>';
   var past=data.beer.filter(function(b){var g=byId('games',b.gameId);return g&&g.date<todayStr()}).sort(function(x,y){return (byId('games',y.gameId).date||'').localeCompare(byId('games',x.gameId).date||'')});
@@ -750,7 +754,7 @@ function vTK(){
   var turns=tkTurns(),queue=turns.filter(function(t){return !t.next}),qi=0;
   var up=gamesSorted().filter(function(g){return isHosted(g)&&g.date>=todayStr()});
   h+='<div class="grid2"><div class="panel"><h3>Upcoming home games</h3>'+(up.length?'<div class="list">'+up.map(function(g){var ts=data.tk.filter(function(x){return x.gameId===g.id});
-      var per=tkPerGame(),who=ts.map(function(x){return '<div><b>'+esc(x.responsible)+'</b>'+(x.timekeeper?' <span class="sub">bringing '+esc(x.timekeeper)+'</span>':'')+'</div>'}).join('');
+      var per=tkPerGame(),who=ts.map(function(x){return '<div><b>'+esc(x.responsible)+'</b>'+(x.timekeeper?' <span class="sub">bringing '+esc(x.timekeeper)+'</span>':'')+unassignBtn('tk',x.id,x.responsible)+'</div>'}).join('');
       for(var k=ts.length;k<per;k++)who+='<div>'+(queue[qi]?'<span class="sub">Up next: '+esc(queue[qi++].who)+'</span>':'<span class="pill warn">Open spot</span>')+'</div>';
       return '<div class="li"><div class="l"><b>'+esc(fdate(g.date))+'</b> <span class="sub">'+esc(ftime(g.time))+'</span><div class="sub">'+crest(g.opponent,20)+'vs '+esc(g.opponent||'TBD')+' · '+esc(g.rink)+'</div></div><div style="text-align:right">'+who+(ts.length<tkPerGame()?'<div><button class="btn sm ed-only" data-act="tkturn" data-game="'+g.id+'">Assign</button></div>':'')+'</div></div>'}).join('')+'</div>':'<p class="sub">No upcoming home games.</p>')+'</div>';
   var doneN=turns.filter(function(t){return t.n||t.next}).length;
@@ -1279,6 +1283,10 @@ document.addEventListener('click',function(e){
       case 'assignref':return openForm('refs',null,{gameId:a.dataset.game,role:'Referee'});
       case 'editgame':return openForm('games',a.dataset.game);
       case 'payrefs':return openPayRefs(a.dataset.game);
+      case 'unassign':var uc=a.dataset.c,urec=byId(uc,a.dataset.id);if(!urec)return;
+        if(uc==='refs'&&num(urec.amountPaid)>0)return toast(urec.name+' has already been paid for this game. Tap their row on the Refs tab to change it.');
+        var ug=byId('games',urec.gameId),unm=uc==='refs'?urec.name:uc==='tk'?urec.responsible:urec.bringer;
+        removeRecord(uc,urec.id);changed();return toast('Took '+unm+' off '+(ug?fdate(ug.date):'the game')+'. Press Undo to put them back.');
       case 'undo':return undo();
       case 'redo':return redo();
       case 'backup':return downloadBackup();
