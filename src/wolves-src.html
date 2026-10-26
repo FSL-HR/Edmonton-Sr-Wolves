@@ -1,0 +1,1143 @@
+<title>Edmonton Sr Wolves</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">
+<style id="wolves-style">
+/* Layout: crest header over a sticky tab rail; each tab is a stack of panels on black ice */
+:root{
+  --ink:#0b0a0f; --panel:#15131c; --panel2:#1c1926; --line:#2b2737; --fg:#f4f2f8; --muted:#a39eb2;
+  --purple:#6f45cf; --purple-hi:#a57cff; --purple-deep:#2a1a52; --silver:#cfcfd6;
+  --ok:#46d39a; --warn:#f2b84b; --bad:#ff6b7a;
+  --display:'Saira Condensed','Arial Narrow',sans-serif; --body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--ink);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ink)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--purple-hi);outline-offset:2px}
+
+/* header */
+.crest{background:radial-gradient(120% 140% at 0% 0%,var(--purple-deep) 0%,var(--ink) 62%);border-bottom:1px solid var(--line)}
+.crest .wrap{display:flex;gap:18px;align-items:center;padding-block:18px 16px;flex-wrap:wrap}
+.crest img{width:76px;height:76px;border-radius:14px;flex:none}
+.crest h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,42px);line-height:1;letter-spacing:.02em;text-transform:uppercase;margin:0;text-wrap:balance}
+.crest h1 span{color:var(--purple-hi)}
+.crest .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.crest .grow{flex:1;min-width:0}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--muted);background:var(--panel)}
+.chip b{color:var(--fg);font-variant-numeric:tabular-nums}
+
+/* tabs */
+.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--ink) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.rail .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-block:8px}
+.rail .wrap::-webkit-scrollbar{display:none}
+.tab{flex:none;border:0;background:none;padding:8px 12px;border-radius:8px;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+.tab:hover{color:var(--fg);background:var(--panel)}
+.tab[aria-selected="true"]{color:#fff;background:var(--purple)}
+
+main .wrap{padding-block:22px 120px;display:grid;gap:18px}
+.sec-head{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.sec-head h2{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;letter-spacing:.03em;text-transform:uppercase;margin:0;flex:1;min-width:0}
+.sec-head p{margin:4px 0 0;color:var(--muted);font-size:14px}
+h3{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.05em;text-transform:uppercase;margin:0 0 10px;color:var(--silver)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:18px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:4px;min-width:0}
+.tile .k{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tile .v{font-family:var(--display);font-weight:800;font-size:32px;line-height:1.05;font-variant-numeric:tabular-nums}
+.tile .s{font-size:13px;color:var(--muted)}
+.bar{height:6px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--purple-hi);border-radius:6px}
+.bar.ok i{background:var(--ok)}
+
+/* next game */
+.next{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;background:linear-gradient(135deg,var(--purple-deep),var(--panel) 70%);border:1px solid var(--line);border-radius:14px;padding:18px}
+.datebox{width:78px;text-align:center;border:1px solid var(--purple);border-radius:12px;padding:8px 4px;background:var(--ink)}
+.datebox .m{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--purple-hi);font-weight:700}
+.datebox .d{font-family:var(--display);font-weight:800;font-size:34px;line-height:1}
+.datebox .w{font-size:12px;color:var(--muted)}
+.next .t{font-family:var(--display);font-weight:800;font-size:clamp(22px,4vw,30px);line-height:1.05;text-transform:uppercase}
+.next .facts{display:flex;gap:6px 16px;flex-wrap:wrap;color:var(--muted);font-size:14px;margin-top:6px}
+.next .facts b{color:var(--fg);font-weight:600}
+
+/* tables */
+.tw{overflow-x:auto;margin:0 -4px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;white-space:nowrap}
+td.nw{white-space:nowrap}
+tr.cat td{background:var(--panel2);font-weight:600}
+tr.tot td{font-weight:700;border-top:2px solid var(--line)}
+.editing tr[data-edit]{cursor:pointer}
+.editing tr[data-edit]:hover td{background:var(--panel2)}
+.sub{color:var(--muted);font-size:13px}
+.jersey{display:inline-grid;place-items:center;min-width:32px;height:26px;padding:0 6px;border-radius:6px;background:var(--purple-deep);color:var(--purple-hi);font-family:var(--display);font-weight:800;font-size:16px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;border:1px solid currentColor}
+.pill.ok{color:var(--ok)} .pill.warn{color:var(--warn)} .pill.bad{color:var(--bad)} .pill.mute{color:var(--muted)} .pill.pu{color:var(--purple-hi)}
+.res{font-family:var(--display);font-weight:800;font-size:17px}
+.res.W{color:var(--ok)} .res.L{color:var(--bad)} .res.T{color:var(--warn)}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--fg);font-size:16px;margin-bottom:4px}
+.list{display:grid;gap:8px}
+.li{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.li:last-child{border-bottom:0}
+.li .l{min-width:0}
+
+/* contact cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:6px;min-width:0}
+.card .nm{font-weight:700;font-size:17px}
+.card .rl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--purple-hi);font-weight:700}
+.cline{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:14px;min-width:0}
+.cline span{user-select:all;overflow-wrap:anywhere;min-width:0}
+
+/* gamesheets */
+.sheets{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:10px;margin-top:10px}
+.sheet{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--ink);display:grid}
+.sheet a{display:block;color:var(--fg);text-decoration:none}
+.sheet img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:var(--panel2)}
+.sheet .pdf{aspect-ratio:3/4;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:26px;color:var(--purple-hi);background:var(--panel2)}
+.sheet .cap{padding:6px 8px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel2);padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:600;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--purple-hi)}
+.btn.pri{background:var(--purple);border-color:var(--purple);color:#fff}
+.btn.pri:hover{background:var(--purple-hi);border-color:var(--purple-hi);color:var(--ink)}
+.btn.sm{padding:4px 10px;font-size:13px}
+.btn.danger{color:var(--bad)}
+.btn.danger.arm{background:var(--bad);color:var(--ink);border-color:var(--bad)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.ed-only{display:none}
+.editing .ed-only{display:revert}
+.editing .acts.ed-only,.editing .ed-only.acts{display:flex}
+
+/* save bar */
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--panel2);border-top:1px solid var(--purple);padding-bottom:env(safe-area-inset-bottom,0px)}
+.savebar .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-block:10px}
+.savebar .msg{flex:1;min-width:0;font-size:14px}
+.savebar .msg b{color:var(--purple-hi)}
+.modebar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* modal */
+.scrim{position:fixed;inset:0;z-index:30;background:rgba(5,4,8,.72);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal{width:min(560px,100%);max-height:100%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:14px}
+.modal h3{margin:0;color:var(--fg);font-size:22px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px}
+.fld{display:grid;gap:4px;min-width:0}
+.fld.wide{grid-column:1/-1}
+.fld label{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.fld .hint{font-size:12px;color:var(--muted)}
+.fld input:not([type=checkbox]),.fld select,.fld textarea{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.fld textarea{min-height:80px;resize:vertical}
+.fld.chk{grid-auto-flow:column;justify-content:start;align-items:center;gap:8px}
+.fld.chk input{width:20px;height:20px;accent-color:var(--purple)}
+.modal .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.modal .sp{flex:1}
+.err{color:var(--bad);font-size:13px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--fg);color:var(--ink);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;max-width:calc(100% - 32px)}
+.foot{color:var(--muted);font-size:13px;text-align:center}
+
+/* ask */
+.askfab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:22;display:flex;align-items:center;gap:8px;border:1px solid var(--purple-hi);background:var(--purple);color:#fff;border-radius:999px;padding:11px 18px 11px 14px;font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.askfab:hover{background:var(--purple-hi);color:var(--ink)}
+.askfab svg{width:20px;height:20px}
+body.hasbar .askfab{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+.askdrawer{position:fixed;top:0;right:0;bottom:0;z-index:26;width:min(460px,100%);background:var(--panel);border-left:1px solid var(--line);display:grid;grid-template-rows:auto 1fr auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px);box-shadow:-12px 0 40px rgba(0,0,0,.55)}
+.askdrawer.drag{outline:3px dashed var(--purple-hi);outline-offset:-10px}
+.askhd{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.askhd h3{margin:0;flex:1;color:var(--fg)}
+.asklog{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.msg{max-width:92%;padding:10px 13px;border-radius:12px;font-size:14.5px;line-height:1.5;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--purple-deep);border:1px solid var(--purple)}
+.msg.ai{align-self:flex-start;background:var(--panel2);border:1px solid var(--line)}
+.msg.ai ul{margin:6px 0;padding-left:20px}
+.msg.ai p{margin:0 0 8px}.msg.ai p:last-child{margin:0}
+.msg .st{color:var(--muted);font-style:italic}
+.msg .er{color:var(--bad);font-size:13px;margin-top:6px}
+.msg .fl{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.msg .fl span,.attchips span{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--ink);border:1px solid var(--line);color:var(--silver)}
+.msg .un{margin-top:8px}
+.note{align-self:center;font-size:12.5px;color:var(--muted);text-align:center}
+.askintro{color:var(--muted);font-size:14px;display:grid;gap:10px}
+.askintro b{color:var(--fg)}
+.sugs{display:grid;gap:6px}
+.sug{text-align:left;border:1px solid var(--line);background:var(--ink);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:14px}
+.sug:hover{border-color:var(--purple-hi)}
+.askft{border-top:1px solid var(--line);padding:12px 16px;display:grid;gap:8px}
+.attchips{display:flex;flex-wrap:wrap;gap:6px}
+.attchips span{display:inline-flex;gap:6px;align-items:center}
+.attchips button{border:0;background:none;color:var(--muted);cursor:pointer;padding:0;font-size:14px}
+#askq{width:100%;min-height:64px;max-height:180px;resize:vertical;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.askrow{display:flex;gap:8px;align-items:center}
+.askrow .sp{flex:1}
+.askrow .hint{font-size:12px;color:var(--muted)}
+@media (max-width:560px){
+  .crest img{width:58px;height:58px}
+  .next{grid-template-columns:1fr}
+  .datebox{width:auto;display:flex;gap:8px;align-items:baseline;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<div id="app"></div>
+<input type="file" id="sheetfile" accept="image/png,image/jpeg,image/webp,application/pdf" hidden>
+<script type="application/json" id="wolves-data">{}</script>
+<script type="text/plain" id="wolves-logo">__LOGO__</script>
+<script id="wolves-app">
+(function(){
+'use strict';
+var DATA_EL=document.getElementById('wolves-data');
+var LOGO=document.getElementById('wolves-logo').textContent.trim();
+var STYLE_SRC=document.getElementById('wolves-style').textContent;
+var APP_SRC=document.getElementById('wolves-app').textContent;
+var RESET=':root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}';
+
+var data;
+try{data=JSON.parse(DATA_EL.textContent)}catch(e){data={}}
+var DEF={rev:0,settings:{season:'2026-27',league:'',duesMode:'Follow the budget',dues:'',ptShare:'50',subFee:'',hostRinks:'Morinville=225, Silent Ice=358',gst:'5',slotHours:'2.25',refFee:'120',refsPerGame:'2',refInsurance:'20',hostIcePaidBy:'',extraHomeGames:'0',extraHomeRink:'Morinville',practices:'',practiceHours:'1',refGames:'6',feeBuffer:'0',tkPerGame:'2'},roster:[],subUses:[],payments:[],ice:[],icePay:[],refs:[],games:[],beer:[],tk:[],budget:[],contacts:[]};
+/* roster types: Full time, Part time, Sub (older Regular/Spare/Injured and the old separate sub list fold in) */
+function rosterType(p){var s=(p&&p.status)||'Full time';return s==='Regular'||s==='Injured'?'Full time':s==='Spare'?'Sub':s}
+/* fill defaults and fold in older data shapes; runs on load and on every copy that arrives from the cloud */
+function prep(){
+Object.keys(DEF).forEach(function(k){if(data[k]==null)data[k]=JSON.parse(JSON.stringify(DEF[k]))});
+['duesMode','ptShare','subFee','hostRinks','gst','slotHours','refFee','refsPerGame','refInsurance','hostIcePaidBy','extraHomeGames','extraHomeRink','practices','practiceHours','refGames','feeBuffer','tkPerGame'].forEach(function(k){if(data.settings[k]==null)data.settings[k]=DEF.settings[k]});
+if(data.settings.hostRinks==='Morinville, Silent Ice')data.settings.hostRinks=DEF.settings.hostRinks;
+data.roster.forEach(function(p){p.status=rosterType(p)});
+if(data.subs){data.subs.forEach(function(s){if(!data.roster.some(function(p){return p.id===s.id}))data.roster.push({id:s.id,name:s.name,number:'',pos:s.pos||'',status:'Sub',phone:s.phone||'',email:s.email||'',dues:'',notes:s.notes||''})});delete data.subs}
+data.subUses.forEach(function(u){if(u.subId&&!u.playerId){u.playerId=u.subId}delete u.subId});
+}
+prep();
+var baseRev=data.rev||0;
+setTimeout(function(){var a=data.games.map(syncHomeAway).some(Boolean),b=data.games.map(applyHostIce).some(Boolean);if((a||b)&&typeof render==='function')render()},0);
+
+var editor=false, preview=false, artifactNS=null, assetsNS=null, dirty=0, modal=null, tab='overview';
+var TABS=[['overview','Overview'],['schedule','Schedule'],['roster','Roster'],['payments','Player Payments'],['subs','Subs'],['ice','Ice'],['refs','Refs'],['budget','Budget'],['owed','Owed Back'],['gamesheets','Gamesheets'],['beer','Beer'],['timekeepers','Timekeepers'],['contacts','Contacts']];
+
+/* ---------- helpers ---------- */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4)}
+function num(v){var n=parseFloat(v);return isFinite(n)?n:0}
+function money(n){n=num(n);var neg=n<0;n=Math.abs(n);return (neg?'−$':'$')+n.toLocaleString('en-CA',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})}
+function sum(arr,f){return arr.reduce(function(a,x){return a+num(typeof f==='function'?f(x):x[f])},0)}
+var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function pd(d){if(!d)return null;var p=d.split('-').map(Number);return new Date(p[0],p[1]-1,p[2])}
+function fdate(d){var x=pd(d);return x?DOW[x.getDay()]+' '+MON[x.getMonth()]+' '+x.getDate():'Date TBD'}
+function ftime(t){if(!t)return '';var p=t.split(':').map(Number),h=p[0];return (h%12||12)+':'+String(p[1]||0).padStart(2,'0')+(h>=12?' PM':' AM')}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function byId(c,id){return data[c].find(function(x){return x.id===id})}
+function gamesSorted(){return data.games.slice().sort(function(a,b){return ((a.date||'9')+(a.time||'')).localeCompare((b.date||'9')+(b.time||''))})}
+function gameLabel(g){if(!g)return 'Unknown game';return fdate(g.date)+' · '+(g.ha==='Away'?'@ ':'vs ')+(g.opponent||'TBD')}
+function resultOf(g){if(g.status!=='Final'||g.gf===''||g.ga===''||g.gf==null||g.ga==null)return null;var f=num(g.gf),a=num(g.ga);return f>a?'W':f<a?'L':'T'}
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+function canEditNow(){return editor&&!preview}
+
+/* ---------- refs: standard fee each + mileage when it applies + one-time insurance on a ref's first game with us ---------- */
+function refKey(r){return String(r.name||'').trim().toLowerCase().replace(/\s+/g,' ')}
+function refWhen(r){var g=byId('games',r.gameId)||{};return (g.date||'9999')+(g.time||'')+r.id}
+function refBaseFee(r){return r.fee!==''&&r.fee!=null?num(r.fee):num(data.settings.refFee)}
+function refIsFirst(r){
+  var k=refKey(r);if(!k)return false;
+  var mine=data.refs.filter(function(x){return refKey(x)===k});
+  if(mine.some(function(x){return x.insured}))return false;
+  return mine.sort(function(a,b){return refWhen(a).localeCompare(refWhen(b))})[0]===r;
+}
+function refInsurance(r){return refIsFirst(r)?num(data.settings.refInsurance):0}
+function refOwed(r){var g=byId('games',r.gameId);if(g&&!isHosted(g))return 0;return round2(refBaseFee(r)+num(r.mileage)+refInsurance(r))}
+function refBreakdown(r){var p=[money(refBaseFee(r))+' fee'];if(num(r.mileage))p.push(money(r.mileage)+' mileage');if(refInsurance(r))p.push(money(refInsurance(r))+' first-game insurance');return p.join(' + ')}
+function refUnpaid(r){return num(r.amountPaid)<refOwed(r)}
+function refsPerGame(){return Math.max(0,Math.round(num(data.settings.refsPerGame)))}
+/* planned ref cost for hosted games: assigned refs at what they are owed; open spots at the standard fee plus first-game insurance (her call: budget for new refs every home game) */
+/* extra home games not on the schedule yet: ice at the chosen rink's rate, refs at fee + insurance */
+function extraGames(){return Math.max(0,Math.round(num(data.settings.extraHomeGames)))}
+function extraRink(){var k=String(data.settings.extraHomeRink||'').trim().toLowerCase(),l=hostRinkList();return l.find(function(h){return k&&(h.key.indexOf(k)>=0||k.indexOf(h.key)>=0)})||l[0]||null}
+function extraIcePer(){var h=extraRink();return h?round2(round2(h.rate*num(data.settings.slotHours))*(1+num(data.settings.gst)/100)):0}
+function extraIcePlanned(){var h=extraRink(),hrs=num(data.settings.slotHours),base=h?round2(h.rate*hrs):0;return round2(extraGames()*(base+round2(base*num(data.settings.gst)/100)))}
+function extraRefGames(){return Math.max(0,Math.min(extraGames(),refGameCap()-refGames().length))}
+function extraRefsPlanned(){return round2(extraRefGames()*refsPerGame()*(num(data.settings.refFee)+num(data.settings.refInsurance)))}
+/* practices: count per rink × practice length × that rink's hourly rate, plus GST */
+function practicePlan(){
+  var hrs=num(data.settings.practiceHours),gst=num(data.settings.gst);
+  return String(data.settings.practices||'').split(',').map(function(x){var p=x.split('='),k=p[0].trim().toLowerCase(),n=Math.max(0,Math.round(num(p[1])));if(!k||!n)return null;
+    var h=hostRinkList().find(function(r){return r.key.indexOf(k)>=0||k.indexOf(r.key)>=0});var base=h?round2(h.rate*hrs):0,each=round2(base+round2(base*gst/100));
+    return {rink:h?h.name:p[0].trim(),n:n,rate:h?h.rate:0,hours:hrs,each:each,total:round2(each*n)}}).filter(Boolean);
+}
+function practicePlanned(){return round2(sum(practicePlan(),'total'))}
+function refGameCap(){var c=String(data.settings.refGames==null?'':data.settings.refGames).trim();return c===''?Infinity:Math.max(0,Math.round(num(c)))}
+/* booked home games that get refs: earliest first, up to the season cap */
+function refGames(){return gamesSorted().filter(isHosted).slice(0,refGameCap()===Infinity?undefined:refGameCap())}
+function hostedRefsPlanned(){return round2(sum(refGames(),function(g){var rs=data.refs.filter(function(r){return r.gameId===g.id});return sum(rs,refOwed)+Math.max(0,refsPerGame()-rs.length)*(num(data.settings.refFee)+num(data.settings.refInsurance))}))}
+
+/* ---------- hosting: at our rinks the Wolves book and pay the ice and assign and pay the refs ---------- */
+/* settings.hostRinks reads "Rink=hourly rate before GST, …"; every game slot is settings.slotHours long */
+function hostRinkList(){return String(data.settings.hostRinks||'').split(',').map(function(x){var p=x.split('=');return {name:p[0].trim(),key:p[0].trim().toLowerCase(),rate:num(String(p[1]||'').replace(/[$\s]/g,''))}}).filter(function(x){return x.key})}
+function hostRinkFor(g){var r=String((g&&g.rink)||'').toLowerCase();return r?hostRinkList().find(function(h){return r.indexOf(h.key)>=0})||null:null}
+function isHosted(g){return !!g&&g.status!=='Cancelled'&&!!hostRinkFor(g)}
+function round2(n){return Math.round(n*100+1e-9)/100}
+function iceQuote(g){
+  var h=hostRinkFor(g),hrs=num(data.settings.slotHours)||0,gst=num(data.settings.gst);
+  if(!h||!h.rate||!hrs)return null;
+  var base=round2(h.rate*hrs),tax=round2(base*gst/100);
+  return {rate:h.rate,hours:hrs,base:base,gst:tax,total:round2(base+tax),text:hrs+' h × '+money(h.rate)+' + '+gst+'% GST'};
+}
+function iceCharged(g){return !!g&&!!hostRinkFor(g)&&(g.status!=='Cancelled'||!!g.icePaid)}
+function iceCostFor(g){if(!iceCharged(g))return 0;if(g.iceCost!==''&&g.iceCost!=null)return num(g.iceCost);var q=iceQuote(g);return q?q.total:0}
+function iceCostNote(g){if(g.iceCost!==''&&g.iceCost!=null)return 'Set by hand';var q=iceQuote(g);return q?q.text+' ('+money(q.base)+' + '+money(q.gst)+')':''}
+function hostedIcePlanned(){return round2(sum(data.games.filter(iceCharged),iceCostFor))}
+function hostStatus(g){
+  var refs=data.refs.filter(function(r){return r.gameId===g.id}),unpaid=refs.filter(refUnpaid);
+  var todo=[];
+  var cost=iceCostFor(g);
+  if(!(cost>0))todo.push('Set ice cost');else if(!g.icePaid)todo.push('Pay ice '+money(cost));
+  var need=refsPerGame()-refs.length;
+  if(need>0)todo.push(refs.length?'Assign '+need+' more ref'+(need>1?'s':''):'Assign '+refsPerGame()+' refs');
+  var tkNeed=tkPerGame()-data.tk.filter(function(x){return x.gameId===g.id}).length;if(g.status!=='Cancelled'&&g.date>=todayStr()&&tkNeed>0)todo.push('Pick '+tkNeed+' to bring a timekeeper');
+  if(unpaid.length)todo.push('Pay '+unpaid.length+' ref'+(unpaid.length>1?'s':'')+' '+money(sum(unpaid,function(r){return refOwed(r)-num(r.amountPaid)})));
+  return {refs:refs,unpaid:unpaid,todo:todo,done:!todo.length};
+}
+function hostPill(g){var st=hostStatus(g);return '<span class="pill '+(st.done?'ok':'pu')+'">We host'+(st.done?' · all set':'')+'</span>'}
+
+function syncHomeAway(g){if(!g||!String(g.rink||'').trim())return false;var ha=hostRinkFor(g)?'Home':'Away';if(g.ha===ha)return false;g.ha=ha;return true}
+function applyHostIce(g){
+  var who=String(data.settings.hostIcePaidBy||'').trim();
+  if(!who||!g||g.iceDefaulted||String(g.icePaidBy||'').trim()||!isHosted(g))return false;
+  g.icePaid=true;g.icePaidBy=who;g.iceReimbursed=!!g.iceReimbursed;g.iceDefaulted=true;return true;
+}
+/* ---------- owed back: money people paid out of their own pocket that the team still has to return ---------- */
+function teamPaid(who){return !String(who||'').trim()||/^(the )?team\b/i.test(String(who).trim())}
+function owedBackItems(){
+  var out=[];
+  data.games.forEach(function(g){if(g.icePaid&&!teamPaid(g.icePaidBy)){var a=iceCostFor(g);out.push({kind:'gameIce',id:g.id,who:g.icePaidBy.trim(),what:'Ice · '+gameLabel(g)+(g.rink?' · '+g.rink:''),amount:a,done:!!g.iceReimbursed,date:g.date})}});
+  data.refs.forEach(function(r){if(num(r.amountPaid)>0&&!teamPaid(r.paidBy)&&!refCreditTo(r)){var g=byId('games',r.gameId);out.push({kind:'refs',id:r.id,who:r.paidBy.trim(),what:'Ref '+r.name+' · '+gameLabel(g)+(refInsurance(r)?' (incl. $'+num(data.settings.refInsurance)+' insurance)':''),amount:num(r.amountPaid),done:!!r.reimbursed,date:(g&&g.date)||r.paidDate})}});
+  data.icePay.forEach(function(x){if(!teamPaid(x.paidBy)){var c=byId('ice',x.contractId);out.push({kind:'icePay',id:x.id,who:x.paidBy.trim(),what:'Ice contract · '+(c?labelOf('ice',c):'?'),amount:num(x.amount),done:!!x.reimbursed,date:x.date})}});
+  return out.filter(function(x){return x.amount>0||x.noCost});
+}
+function owedBackByPerson(includeDone){
+  var m={};owedBackItems().forEach(function(x){if(x.done&&!includeDone)return;var k=x.who.toLowerCase();(m[k]=m[k]||{who:x.who,items:[],total:0}).items.push(x);if(!x.done)m[k].total=round2(m[k].total+x.amount)});
+  return Object.keys(m).map(function(k){return m[k]}).sort(function(a,b){return b.total-a.total});
+}
+function markPaidBack(kind,id,val){var x=kind==='gameIce'?byId('games',id):byId(kind,id);if(!x)return false;if(kind==='gameIce')x.iceReimbursed=val;else x.reimbursed=val;return true}
+
+/* ---------- money logic ---------- */
+function plannedNeed(){var e=sum(data.budget.filter(function(b){return catType(b.category)==='Expense'}),'planned')+hostedIcePlanned()+hostedRefsPlanned()+extraIcePlanned()+extraRefsPlanned()+practicePlanned(),i=sum(data.budget.filter(function(b){return catType(b.category)==='Income'&&b.category!=='Player dues'}),'planned');return {e:e,i:i,need:e-i}}
+function feeInfo(){
+  var ft=data.roster.filter(function(p){return rosterType(p)==='Full time'}).length,pt=data.roster.filter(function(p){return rosterType(p)==='Part time'}).length,sb=data.roster.filter(function(p){return rosterType(p)==='Sub'}).length,co=data.roster.filter(function(p){return rosterType(p)==='Coach'}).length;
+  var shareRaw=data.settings.ptShare,share=(shareRaw===''||shareRaw==null?50:num(shareRaw))/100,fixed=data.settings.duesMode==='Fixed amount',b=plannedNeed();
+  /* players on a special deal pay their own amount and drop out of the split */
+  var deals=data.roster.filter(function(p){var t=rosterType(p);return (t==='Full time'||t==='Part time')&&p.dues!==''&&p.dues!=null});
+  var units=ft+pt*share-sum(deals,function(p){return rosterType(p)==='Part time'?share:1}),need=b.need-sum(deals,'dues');
+  var ftFee=fixed?num(data.settings.dues):(units>0&&need>0?Math.ceil(need/units):0);
+  var buf=Math.max(0,num(data.settings.feeBuffer)),ptBase=Math.ceil(ftFee*share);
+  return {fixed:fixed,ft:ft,pt:pt,subs:sb,coaches:co,share:share,need:b.need,plannedExpenses:b.e,otherIncome:b.i,buffer:buf,ftBase:ftFee,ptBase:ptBase,ftFee:ftFee+buf,ptFee:ptBase+buf,bufferTotal:buf*(ft+pt),subFee:num(data.settings.subFee)};
+}
+function owedBy(p){if(rosterType(p)==='Coach')return 0;if(p.dues!==''&&p.dues!=null)return num(p.dues);var t=rosterType(p),f=feeInfo();return t==='Full time'?f.ftFee:t==='Part time'?f.ptFee:0}
+function subFeesOwing(p){return sum(data.subUses.filter(function(x){return x.playerId===p.id&&!x.paid}),'fee')}
+function feeLine(){var f=feeInfo();return 'Full time <b>'+money(f.ftFee)+'</b> · Part time <b>'+money(f.ptFee)+'</b> ('+Math.round(f.share*100)+'%) · Subs <b>'+(f.subFee?money(f.subFee)+' a game':'pay per game')+'</b>'+(f.buffer?' · includes '+money(f.buffer)+' buffer each':'')+(f.fixed?'':' · fees follow the budget')}
+function commitPill(p){var c=p.commitment||'';if(!c)return '<span class="sub">—</span>';var cls=c==='100%'?'ok':c==='75%'?'ok':c==='Affiliate/Spare'?'pu':'warn';return '<span class="pill '+cls+'">'+esc(c)+'</span>'}
+function rosterByName(n){n=String(n||'').trim().toLowerCase().replace(/\s+/g,' ');return n?data.roster.find(function(p){return String(p.name||'').trim().toLowerCase().replace(/\s+/g,' ')===n})||null:null}
+/* a ref payment made by a roster player is a credit on that player's fees, unless the team paid them back in cash */
+function refCreditTo(r){var p=num(r.amountPaid)>0&&!r.reimbursed?rosterByName(r.paidBy):null;return p&&rosterType(p)!=='Coach'?p:null}
+function refCredits(p){return data.refs.filter(function(r){var q=refCreditTo(r);return q&&q.id===p.id})}
+function cashPaid(p){return sum(data.payments.filter(function(x){return x.playerId===p.id}),'amount')}
+function paidBy(p){return round2(cashPaid(p)+sum(refCredits(p),'amountPaid'))}
+function icePaid(c){return sum(data.icePay.filter(function(x){return x.contractId===c.id}),'amount')}
+var CATS={Expense:['Ice','Referees','League fees','Jerseys & gear','Affiliate players','Tournaments','Insurance','Other expense'],Income:['Player dues','Sub fees','Sponsors','Fundraising','Other income']};
+var AUTO={
+  'Ice':function(){return sum(data.icePay,'amount')+sum(data.games.filter(function(g){return g.icePaid}),iceCostFor)},
+  'Referees':function(){return sum(data.refs,'amountPaid')},
+  'Player dues':function(){return sum(data.payments,'amount')+sum(data.refs.filter(refCreditTo),'amountPaid')},
+  'Sub fees':function(){return sum(data.subUses.filter(function(s){return s.paid}),'fee')}
+};
+function catType(c){return CATS.Income.indexOf(c)>=0?'Income':'Expense'}
+function catActual(c){return AUTO[c]?AUTO[c]():sum(data.budget.filter(function(b){return b.category===c}),'actual')}
+function cashOnHand(){var i=0,e=0;CATS.Income.forEach(function(c){i+=catActual(c)});CATS.Expense.forEach(function(c){e+=catActual(c)});return {i:i,e:e,net:i-e}}
+
+/* ---------- schemas for the editor ---------- */
+var REFMAP={subplayers:'roster',homegames:'games'};
+var METHODS=['e-Transfer','Cash','Cheque','Credit card','Other'];
+var S={
+  roster:{one:'player',f:[['name','Name','text',1],['number','Jersey #','text'],['pos','Position','text',0,0,'e.g. LW, C/RW, D, G'],['status','Type','select',0,['Full time','Part time','Sub','Coach'],'Coaches never pay fees and are left out of every turn rotation.'],['phone','Phone','tel'],['email','Email','email'],['commitment','Commitment','select',0,['100%','75%','50%','25%','Affiliate/Spare'],'From the intake form: 100% and 75% are full time, 50% and 25% part time, Affiliate/Spare on call.'],['teamlinkt','Registered on TeamLinkt','check'],['volExempt','Exempt from volunteer commitment (timekeeper)','check'],['reg','Registered (REG.)','check',0,0,'REG. column on the intake form'],['availability','Availability notes','text',0,0,'From the intake form, in their words'],['dues','Dues owed ($)','money',0,0,'Leave blank to use the fee for their type. Fill in only for a special deal.'],['notes','Notes','textarea']]},
+  payments:{one:'payment',f:[['playerId','Player','ref:roster',1],['date','Date','date',1],['amount','Amount ($)','money',1],['method','Method','select',0,METHODS],['note','Note','text']]},
+  subUses:{one:'sub game',f:[['playerId','Sub','ref:subplayers',1],['gameId','Game','ref:games',1],['fee','Sub fee ($)','money'],['paid','Paid their fee','check'],['note','Note','text']]},
+  games:{one:'game',f:[['date','Date','date',1],['time','Start time','time'],['rink','Rink','text',0,0,'','rinks'],['opponent','Opponent','text'],['ha','Home / Away','select',0,['Home','Away'],'Set by the rink: Morinville and Silent Ice are home, every other rink is away.'],['status','Status','select',0,['Scheduled','Final','Cancelled']],['gf','Wolves goals','number'],['ga','Opponent goals','number'],['iceCost','Ice cost override ($)','money',0,0,'Leave blank for games we host: it is worked out from the rink rate, slot length and GST. Fill in only if the rink charges something different.'],['icePaid','Ice paid','check'],['icePaidBy','Ice paid by','text',0,0,'Leave blank if the team paid it directly','payers'],['iceReimbursed','Team paid them back for the ice','check'],['notes','Notes','textarea']]},
+  refs:{one:'official',f:[['gameId','Game','ref:games',1],['name','Official','text',1],['role','Role','select',0,['Referee','Linesman']],['fee','Game fee ($)','money',0,0,'Leave blank for the standard fee.'],['mileage','Mileage ($)','money',0,0,'Only for special circumstances.'],['insured','Already reffed for us before (insurance paid)','check'],['amountPaid','Amount paid ($)','money'],['paidBy','Paid by','text',0,0,'Who handed over the money','payers'],['paidDate','Date paid','date'],['method','Method','select',0,METHODS],['reimbursed','Team paid them back','check']]},
+  ice:{one:'ice contract',f:[['rink','Rink','text',1,0,'','rinks'],['label','Contract / slot','text',0,0,'e.g. Fall Sundays 9:30 PM'],['start','First ice date','date'],['end','Last ice date','date'],['slots','Number of ice times','number'],['cost','Total contract cost ($)','money'],['contact','Rink contact','text'],['notes','Notes','textarea']]},
+  icePay:{one:'ice payment',f:[['contractId','Contract','ref:ice',1],['date','Date paid','date',1],['amount','Amount ($)','money',1],['method','Method','select',0,METHODS],['paidBy','Paid by','text',0,0,'Leave blank if the team paid it directly','payers'],['reimbursed','Team paid them back','check'],['note','Note','text']]},
+  beer:{one:'beer turn',f:[['gameId','Game','ref:games',1],['bringer','Bringing beer','text',1,0,'','people'],['note','Note','text']]},
+  tk:{one:'timekeeper turn',f:[['gameId','Home game','ref:homegames',1],['responsible','Responsible for bringing one','text',1,0,'','people'],['timekeeper','Timekeeper they are bringing','text',0,0,'Leave blank until you know'],['note','Note','text']]},
+  budget:{one:'budget line',f:[['category','Category','cat',1],['item','Line item','text',1],['planned','Planned ($)','money'],['actual','Actual so far ($)','money',0,0,'Ice, Referees, Player dues and Sub fees fill in automatically from their trackers.'],['notes','Notes','textarea']]},
+  contacts:{one:'contact',f:[['name','Name','text',1],['role','Role','text',0,0,'e.g. Rink booking, Ref assignor, League'],['org','Organization','text'],['phone','Phone','tel'],['email','Email','email'],['notes','Notes','textarea']]},
+  settings:{one:'season and fee settings',f:[['season','Season','text',1],['league','League / division','text'],['duesMode','How fees are set','select',1,['Follow the budget','Fixed amount'],'Follow the budget: planned expenses minus other planned income, split across full-timers, with part-timers counting as their share.'],['dues','Full-time fee when fixed ($)','money'],['ptShare','Part-timers pay (% of full-time fee)','money',0,0,'Set to 74.4 so part-timers pay about $100 more than half (Oct 25, 2026). Was 50.'],['subFee','Sub fee per game ($)','money',0,0,'Filled in when you log a sub for a game.'],['hostRinks','Rinks where we host, with hourly rate','text',0,0,'Rink=hourly rate before GST, comma-separated, e.g. Morinville=225, Silent Ice=358. At these rinks we pay the ice and assign and pay the refs.'],['slotHours','Game slot length (hours)','money',0,0,'Every game slot, e.g. 2.25'],['gst','GST (%)','money'],['refFee','Ref fee per game, each ($)','money'],['refsPerGame','Refs per game','money'],['refInsurance','Insurance for a ref\'s first game with us ($)','money'],['extraHomeGames','Extra home games to budget for','money',0,0,'Home games we expect but have not booked yet. Lower this as they get added to the schedule.'],['extraHomeRink','Price extra games at','text',0,0,'One of the rinks above, e.g. Morinville'],['practices','Practices to budget for','text',0,0,'Rink=number of practices, comma-separated, e.g. Morinville=3, Silent Ice=3. Priced at the rink rates above, no refs.'],['practiceHours','Practice length (hours)','money'],['refGames','Games we pay refs for (season)','money',0,0,'The budget never plans refs for more home games than this.'],['feeBuffer','Buffer added to every fee ($)','money',0,0,'A flat amount on top of each full-time and part-time fee, kept as a cushion.'],['teamlinktCode','TeamLinkt team code','text'],['provinceCode','Province registration code','text'],['hostIcePaidBy','Home ice paid by','text',0,0,'Someone who buys the ice for every game we host this season. Each new hosted game is marked paid by them, and the team owes it back. Leave blank if the team pays the rink directly.','payers']]}
+};
+function refOptions(c){
+  if(c==='games')return gamesSorted().map(function(g){return [g.id,gameLabel(g)]});
+  if(c==='roster')return data.roster.slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'')}).map(function(p){return [p.id,(p.number?'#'+p.number+' ':'')+p.name]});
+  if(c==='homegames'){var hg=gamesSorted().filter(isHosted);return hg.map(function(g){return [g.id,gameLabel(g)+' · '+g.rink]}).concat(refOptions('games').filter(function(o){return !hg.some(function(g){return g.id===o[0]})}))}
+  if(c==='subplayers'){var r=refOptions('roster'),sb=r.filter(function(o){return rosterType(byId('roster',o[0]))==='Sub'});return sb.concat(r.filter(function(o){return sb.indexOf(o)<0}))}
+  if(c==='ice')return data.ice.map(function(x){return [x.id,x.rink+(x.label?' — '+x.label:'')]});
+  return [];
+}
+function datalists(){
+  var rinks={},payers={},people={};
+  data.games.forEach(function(g){if(g.rink)rinks[g.rink]=1});data.ice.forEach(function(g){if(g.rink)rinks[g.rink]=1});
+  data.roster.forEach(function(p){if(p.name){payers[p.name]=1;people[p.name]=1}});
+  data.refs.forEach(function(r){if(r.paidBy)payers[r.paidBy]=1});data.icePay.forEach(function(r){if(r.paidBy)payers[r.paidBy]=1});
+  data.beer.forEach(function(b){if(b.bringer)people[b.bringer]=1});data.tk.forEach(function(b){if(b.responsible)people[b.responsible]=1});
+  function dl(id,o){return '<datalist id="dl-'+id+'">'+Object.keys(o).sort().map(function(v){return '<option value="'+esc(v)+'">'}).join('')+'</datalist>'}
+  return dl('rinks',rinks)+dl('payers',payers)+dl('people',people);
+}
+
+/* ---------- rendering ---------- */
+function E(t,b){return '<div class="empty"><b>'+esc(t)+'</b>'+esc(b)+'</div>'}
+function addBtn(c,label){return '<button class="btn pri sm ed-only" data-act="add" data-coll="'+c+'">+ '+esc(label)+'</button>'}
+function head(title,sub,actions){return '<div class="sec-head"><div style="flex:1;min-width:0"><h2>'+esc(title)+'</h2>'+(sub?'<p>'+sub+'</p>':'')+'</div>'+(actions?'<div class="acts ed-only">'+actions+'</div>':'')+'</div>'}
+function row(c,id,cells){return '<tr data-edit="'+c+':'+id+'" tabindex="'+(canEditNow()?0:-1)+'">'+cells+'</tr>'}
+function tile(k,v,s,pct,ok){return '<div class="tile"><div class="k">'+esc(k)+'</div><div class="v">'+v+'</div>'+(s?'<div class="s">'+s+'</div>':'')+(pct!=null?'<div class="bar'+(ok?' ok':'')+'"><i style="width:'+Math.max(0,Math.min(100,pct))+'%"></i></div>':'')+'</div>'}
+function pct(a,b){return b>0?Math.round(a/b*100):0}
+function record(){var w=0,l=0,t=0,gf=0,ga=0;data.games.forEach(function(g){var r=resultOf(g);if(!r)return;if(r==='W')w++;else if(r==='L')l++;else t++;gf+=num(g.gf);ga+=num(g.ga)});return {w:w,l:l,t:t,gf:gf,ga:ga}}
+function payStatus(owed,paid){if(owed<=0&&paid<=0)return '<span class="pill mute">No dues set</span>';if(paid>=owed)return '<span class="pill ok">Paid</span>';if(paid>0)return '<span class="pill warn">Partial</span>';return '<span class="pill bad">Owing</span>'}
+
+function vOverview(){
+  var up=gamesSorted().filter(function(g){return g.status!=='Cancelled'&&g.status!=='Final'&&(!g.date||g.date>=todayStr())});
+  var ng=up[0], h='';
+  h+=head('Overview',data.updated?'Last updated '+esc(new Date(data.updated).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'})):'');
+  if(ng){
+    var d=pd(ng.date),refs=data.refs.filter(function(r){return r.gameId===ng.id}),beer=data.beer.filter(function(b){return b.gameId===ng.id});
+    h+='<div class="next"><div class="datebox">'+(d?'<div class="m">'+MON[d.getMonth()]+'</div><div class="d">'+d.getDate()+'</div><div class="w">'+DOW[d.getDay()]+'</div>':'<div class="d">TBD</div>')+'</div>'+
+      '<div style="min-width:0"><div class="sub" style="letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--purple-hi)">Next game</div><div class="t">'+(ng.ha==='Away'?'@ ':'vs ')+esc(ng.opponent||'Opponent TBD')+'</div>'+
+      (isHosted(ng)?'<div style="margin-top:6px">'+hostPill(ng)+' <span class="sub">'+(hostStatus(ng).done?'Ice and refs are covered.':'Still to do: '+esc(hostStatus(ng).todo.join(', ')))+'</span></div>':'')+'<div class="facts"><span>Puck drop <b>'+(ftime(ng.time)||'TBD')+'</b></span><span>Rink <b>'+esc(ng.rink||'TBD')+'</b></span><span>Refs <b>'+(refs.length?esc(refs.map(function(r){return r.name}).join(', ')):'Not assigned')+'</b></span><span>Beer <b>'+(beer.length?esc(beer.map(function(b){return b.bringer}).join(', ')):'Nobody yet')+'</b></span></div></div></div>';
+  } else h+=E('No upcoming games','Add games on the Schedule tab and the next one shows up here.');
+  var owed=sum(data.roster,owedBy),paid=sum(data.roster,paidBy),iceCost=sum(data.ice,'cost')+hostedIcePlanned(),iceP=AUTO.Ice(),refFee=sum(data.refs,refOwed),refP=sum(data.refs,'amountPaid'),cash=cashOnHand();
+  h+='<div class="tiles">'+
+    tile('Player dues collected',money(paid),'of '+money(owed)+' owed',pct(paid,owed),paid>=owed&&owed>0)+
+    tile('Ice paid',money(iceP),'of '+money(iceCost)+' expected',pct(iceP,iceCost),iceP>=iceCost&&iceCost>0)+
+    tile('Refs paid',money(refP),refFee>refP?money(refFee-refP)+' still owed':'All officials paid',pct(refP,refFee),refP>=refFee&&refFee>0)+
+    tile('Team balance',money(cash.net),money(cash.i)+' in · '+money(cash.e)+' out')+
+  '</div>';
+  h+=hostPanel(5);
+  var owing=data.roster.map(function(p){return {p:p,b:owedBy(p)-paidBy(p)}}).filter(function(x){return x.b>0}).sort(function(a,b){return b.b-a.b});
+  h+='<div class="grid2"><div class="panel"><h3>Still owing</h3>'+(owing.length?'<div class="list">'+owing.slice(0,10).map(function(x){return '<div class="li"><div class="l">'+(x.p.number?'<span class="jersey">'+esc(x.p.number)+'</span> ':'')+esc(x.p.name)+'</div><b class="n">'+money(x.b)+'</b></div>'}).join('')+'</div>'+(owing.length>10?'<p class="sub">+'+(owing.length-10)+' more on Player Payments</p>':''):(data.roster.length?'<p class="sub">Everyone is paid up.</p>':'<p class="sub">Add your roster and season dues to track who owes.</p>'))+'</div>';
+  var ob=owedBackByPerson(false).filter(function(p){return p.total>0||p.items.some(function(x){return x.noCost})});
+  h+='<div class="panel"><h3>Owed back</h3>'+(ob.length?'<div class="list">'+ob.map(function(p){return '<div class="li"><div class="l">'+esc(p.who)+'<div class="sub">'+p.items.length+' item'+(p.items.length>1?'s':'')+''+'</div></div><b>'+money(p.total)+'</b></div>'}).join('')+'</div><p class="sub" style="margin:8px 0 0">Details on the Owed Back tab.</p>':'<p class="sub">Nobody is out of pocket.</p>')+'</div>';
+  h+='<div class="panel"><h3>Coming up</h3>'+(up.length?'<div class="list">'+up.slice(0,6).map(function(g){return '<div class="li"><div class="l"><b>'+esc(fdate(g.date))+'</b> <span class="sub">'+esc(ftime(g.time))+'</span><div class="sub">'+(g.ha==='Away'?'@ ':'vs ')+esc(g.opponent||'TBD')+' · '+esc(g.rink||'Rink TBD')+'</div></div></div>'}).join('')+'</div>':'<p class="sub">Nothing scheduled yet.</p>')+'</div></div>';
+  return h;
+}
+
+function hostPanel(limit){
+  var hg=gamesSorted().filter(function(g){return isHosted(g)&&g.status!=='Final'&&(!g.date||g.date>=todayStr())});
+  if(!hg.length)return '';
+  return '<div class="panel"><h3>Games we host</h3><p class="sub" style="margin:-4px 0 10px">At these rinks we pay the ice and assign and pay the refs. Ice: '+esc(hostRinkList().map(function(h){return h.name+' '+money(h.rate)+'/h'}).join(', '))+', '+esc(data.settings.slotHours)+' h slots, plus '+esc(data.settings.gst)+'% GST.</p><div class="tw"><table><thead><tr><th>Game</th><th>Ice</th><th>Refs</th><th>Still to do</th><th></th></tr></thead><tbody>'+
+    hg.slice(0,limit||99).map(function(g){var st=hostStatus(g);
+      return '<tr><td class="nw"><b>'+esc(fdate(g.date))+'</b> '+esc(ftime(g.time))+'<div class="sub">'+(g.ha==='Away'?'@ ':'vs ')+esc(g.opponent||'TBD')+' · '+esc(g.rink)+'</div></td>'+
+        '<td class="nw">'+(iceCostFor(g)>0?'<b>'+money(iceCostFor(g))+'</b> '+(g.icePaid?'<span class="pill ok">Paid</span>':'<span class="pill bad">Unpaid</span>')+'<div class="sub">'+esc(iceCostNote(g))+'</div>':'<span class="pill warn">No rate for this rink</span>')+'</td>'+
+        '<td>'+(st.refs.length?esc(st.refs.map(function(r){return r.name}).join(', '))+(st.unpaid.length?' <span class="pill warn">'+st.unpaid.length+' unpaid</span>':' <span class="pill ok">Paid</span>'):'<span class="pill bad">None assigned</span>')+'</td>'+
+        '<td>'+(st.done?'<span class="pill ok">All set</span>':esc(st.todo.join(' · ')))+'</td>'+
+        '<td class="nw"><div class="acts ed-only"><button class="btn sm" data-act="assignref" data-game="'+g.id+'">Assign ref</button><button class="btn sm" data-act="editgame" data-game="'+g.id+'">Mark ice paid</button></div></td></tr>'}).join('')+'</tbody></table></div></div>';
+}
+function vSchedule(){
+  var gs=gamesSorted(),r=record(),h=head('Schedule',gs.length?gs.length+' games · Record '+r.w+'-'+r.l+'-'+r.t:'Every game, result, ref crew and whose turn it is for beer.',addBtn('games','Add game'));
+  if(!gs.length)return h+E('No games yet','Add your first game to start the season schedule.');
+  h+='<div class="panel"><div class="tw"><table><thead><tr><th>Date</th><th>Time</th><th>Opponent</th><th>Rink</th><th>Result</th><th>Refs</th><th>Beer</th><th class="n">Sheets</th></tr></thead><tbody>';
+  gs.forEach(function(g){
+    var res=resultOf(g),refs=data.refs.filter(function(x){return x.gameId===g.id}),unpaid=refs.filter(refUnpaid).length,beer=data.beer.filter(function(b){return b.gameId===g.id});
+    h+=row('games',g.id,'<td class="nw"><b>'+esc(fdate(g.date))+'</b></td><td class="nw">'+esc(ftime(g.time)||'TBD')+'</td><td>'+(g.ha==='Away'?'@ ':'vs ')+esc(g.opponent||'TBD')+'</td><td>'+esc(g.rink||'')+(isHosted(g)?'<div>'+hostPill(g)+'</div>':'')+'</td><td class="nw">'+
+      (g.status==='Cancelled'?'<span class="pill mute">Cancelled</span>'+(iceCharged(g)?'<div class="sub">Ice still paid '+money(iceCostFor(g))+'</div>':''):res?'<span class="res '+res+'">'+res+' '+esc(g.gf)+'–'+esc(g.ga)+'</span>':'<span class="sub">—</span>')+'</td><td class="nw">'+
+      (refs.length?refs.length+' '+(unpaid?'<span class="pill warn">'+unpaid+' unpaid</span>':'<span class="pill ok">paid</span>'):isHosted(g)?'<span class="pill bad">Assign refs</span>':'<span class="sub">Away · not ours</span>')+'</td><td>'+esc(beer.map(function(b){return b.bringer}).join(', '))+'</td><td class="n">'+((g.sheets||[]).length||'')+'</td>');
+  });
+  return h+'</tbody></table></div></div>';
+}
+
+function vRoster(){
+  var rs=data.roster.slice().sort(function(a,b){return num(a.number)-num(b.number)||(a.name||'').localeCompare(b.name||'')});
+  var fi=feeInfo();
+  var h=head('Roster',rs.length?fi.ft+' full time · '+fi.pt+' part time · '+fi.subs+' subs'+(rs.some(function(p){return !p.teamlinkt})?' · <b style="color:var(--bad)">'+rs.filter(function(p){return !p.teamlinkt}).length+' not on TeamLinkt</b>':' · all registered on TeamLinkt')+(fi.coaches?' · '+fi.coaches+' coach'+(fi.coaches>1?'es':''):''):'Full-time players, part-timers, subs and coaches.',addBtn('roster','Add player')+'<button class="btn sm" data-act="bulk">Paste a list</button>'+(rs.some(function(p){return p.email})?'<button class="btn sm" data-act="copyemails">Copy all emails</button>':''));
+  if(data.settings.teamlinktCode||data.settings.provinceCode)h+='<div class="panel"><h3>How to register</h3><div class="list">'+(data.settings.teamlinktCode?'<div class="cline"><span>TeamLinkt code <b>'+esc(data.settings.teamlinktCode)+'</b></span>'+copyBtn(data.settings.teamlinktCode)+'</div>':'')+(data.settings.provinceCode?'<div class="cline"><span>Province code <b>'+esc(data.settings.provinceCode)+'</b></span>'+copyBtn(data.settings.provinceCode)+'</div>':'')+'</div></div>';
+  if(!rs.length)return h+E('No players yet','Add players one at a time, or paste a list from a spreadsheet.');
+  h+='<div class="panel"><div class="tw"><table><thead><tr><th>#</th><th>Name</th><th>Pos</th><th>Type</th><th>Commitment</th><th>Registered</th><th>Phone</th><th>Email</th><th>Owes</th></tr></thead><tbody>';
+  rs.forEach(function(p){h+=row('roster',p.id,'<td>'+(p.number?'<span class="jersey">'+esc(p.number)+'</span>':'')+'</td><td><b>'+esc(p.name)+'</b>'+(p.availability?'<div class="sub">'+esc(p.availability)+'</div>':'')+(p.notes?'<div class="sub">'+esc(p.notes)+'</div>':'')+'</td><td>'+esc(p.pos||'')+'</td><td>'+typePill(p)+'</td><td>'+commitPill(p)+'</td><td class="nw">'+(p.teamlinkt?'<span class="pill ok">TeamLinkt</span>':'<span class="pill bad">Not on TeamLinkt</span>')+'<div>'+(rosterType(p)==='Coach'?'':p.reg?'<span class="pill ok">REG.</span>':'<span class="pill bad">No REG.</span>')+'</div></td><td class="nw">'+esc(p.phone||'')+'</td><td>'+esc(p.email||'')+'</td><td class="nw">'+(rosterType(p)==='Coach'?'<span class="sub">Coach · pays nothing</span>':rosterType(p)==='Sub'?(subFeesOwing(p)?'<span class="pill warn">'+money(subFeesOwing(p))+' sub fees</span>':'<span class="sub">Per game</span>'):payStatus(owedBy(p),paidBy(p)))+'</td>')});
+  return h+'</tbody></table></div></div>';
+}
+
+function typePill(p){var t=rosterType(p);return t==='Coach'?'<span class="pill ok">Coach</span>':t==='Sub'?'<span class="pill pu">Sub</span>':t==='Part time'?'<span class="pill warn">Part time</span>':'<span class="pill mute">Full time</span>'}
+function vPayments(){
+  var owed=sum(data.roster,owedBy),paid=sum(data.roster,paidBy);
+  var h=head('Player Payments',feeLine(),addBtn('payments','Log payment')+'<button class="btn sm" data-act="settings">Fee settings</button>');
+  h+='<div class="tiles">'+tile('Collected',money(paid),pct(paid,owed)+'% of dues',pct(paid,owed),paid>=owed&&owed>0)+tile('Outstanding',money(Math.max(0,owed-paid)),data.roster.filter(function(p){return owedBy(p)>paidBy(p)}).length+' players owing')+tile('Payments logged',String(data.payments.length),'')+'</div>';
+  if(!data.roster.length)return h+E('No players yet','Add your roster first, then log payments against each player.');
+  h+='<div class="panel"><h3>Season fees</h3><p class="sub" style="margin:-4px 0 8px">Paid includes refs a player paid at the rink. Subs pay per game; their fees are on the Subs tab.</p><div class="tw"><table><thead><tr><th>Player</th><th class="n">Owes</th><th class="n">Paid</th><th class="n">Balance</th><th>Status</th></tr></thead><tbody>';
+  data.roster.filter(function(p){var t=rosterType(p);return (t!=='Sub'&&t!=='Coach')||paidBy(p)>0||owedBy(p)>0}).sort(function(a,b){return (owedBy(b)-paidBy(b))-(owedBy(a)-paidBy(a))}).forEach(function(p){var o=owedBy(p),pa=paidBy(p);h+='<tr><td>'+(p.number?'<span class="jersey">'+esc(p.number)+'</span> ':'')+esc(p.name)+' '+typePill(p)+(p.dues!==''&&p.dues!=null?' <span class="sub">special deal</span>':'')+'</td><td class="n">'+money(o)+'</td><td class="n">'+money(pa)+'</td><td class="n"><b>'+money(o-pa)+'</b></td><td>'+payStatus(o,pa)+'</td></tr>'});
+  h+='</tbody></table></div></div>';
+  var credits=data.refs.filter(refCreditTo).map(function(r){var g=byId('games',r.gameId);return {credit:true,r:r,p:refCreditTo(r),date:r.paidDate||(g&&g.date)||'',g:g}});
+  var ps=data.payments.map(function(x){return {x:x,date:x.date||''}}).concat(credits).sort(function(a,b){return (b.date||'').localeCompare(a.date||'')});
+  h+='<div class="panel"><h3>Payment log</h3><p class="sub" style="margin:-4px 0 8px">Cash payments, plus refs paid by a player, which come off what that player owes.</p>'+(ps.length?'<div class="tw"><table><thead><tr><th>Date</th><th>Player</th><th>Method</th><th>Note</th><th class="n">Amount</th></tr></thead><tbody>'+ps.map(function(e){if(e.credit){var r=e.r;return row('refs',r.id,'<td class="nw">'+esc(fdate(e.date))+'</td><td>'+esc(e.p.name)+'</td><td><span class="pill pu">Paid a ref</span>'+(r.method?' <span class="sub">'+esc(r.method)+'</span>':'')+'</td><td>Paid '+esc(r.name)+' for '+esc(gameLabel(e.g))+(e.g&&e.g.rink?' at '+esc(e.g.rink):'')+(refInsurance(r)?' (incl. '+money(data.settings.refInsurance)+' insurance)':'')+'. Taken off what they owe.</td><td class="n"><b>'+money(r.amountPaid)+'</b></td>')}
+    var x=e.x,p=byId('roster',x.playerId);return row('payments',x.id,'<td class="nw">'+esc(fdate(x.date))+'</td><td>'+esc(p?p.name:'Removed player')+'</td><td>'+esc(x.method||'')+'</td><td>'+esc(x.note||'')+'</td><td class="n"><b>'+money(x.amount)+'</b></td>')}).join('')+'</tbody></table></div>':'<p class="sub">No payments logged yet.</p>')+'</div>';
+  return h;
+}
+
+function vSubs(){
+  var subs=data.roster.filter(function(p){return rosterType(p)==='Sub'});
+  var h=head('Subs','Subs are on the roster with type Sub. They pay '+(num(data.settings.subFee)?money(data.settings.subFee)+' ':'a fee ')+'for each game they play.','<button class="btn pri sm" data-act="addsub">+ Add sub</button>'+addBtn('subUses','Log sub for a game'));
+  if(!subs.length)h+=E('No subs yet','Add the subs you call when you are short a skater or goalie. They show on the roster too.');
+  else{
+    h+='<div class="panel"><h3>Sub list</h3><div class="tw"><table><thead><tr><th>Name</th><th>Pos</th><th>Phone</th><th>Email</th><th class="n">Games</th><th class="n">Fees owing</th></tr></thead><tbody>';
+    subs.forEach(function(s){var u=data.subUses.filter(function(x){return x.playerId===s.id}),ow=sum(u.filter(function(x){return !x.paid}),'fee');h+=row('roster',s.id,'<td><b>'+esc(s.name)+'</b>'+(s.notes?'<div class="sub">'+esc(s.notes)+'</div>':'')+'</td><td>'+esc(s.pos||'')+'</td><td class="nw">'+esc(s.phone||'')+'</td><td>'+esc(s.email||'')+'</td><td class="n">'+u.length+'</td><td class="n">'+(ow?'<span class="pill warn">'+money(ow)+'</span>':'<span class="sub">—</span>')+'</td>')});
+    h+='</tbody></table></div></div>';
+  }
+  var us=data.subUses.slice().sort(function(a,b){var ga=byId('games',a.gameId),gb=byId('games',b.gameId);return ((gb&&gb.date)||'').localeCompare((ga&&ga.date)||'')});
+  if(us.length){h+='<div class="panel"><h3>Games subbed</h3><div class="tw"><table><thead><tr><th>Game</th><th>Sub</th><th class="n">Fee</th><th>Status</th></tr></thead><tbody>'+us.map(function(x){var s=byId('roster',x.playerId);return row('subUses',x.id,'<td>'+esc(gameLabel(byId('games',x.gameId)))+'</td><td>'+esc(s?s.name:'Removed sub')+'</td><td class="n">'+money(x.fee)+'</td><td>'+(num(x.fee)<=0?'<span class="pill mute">No fee</span>':x.paid?'<span class="pill ok">Paid</span>':'<span class="pill bad">Owing</span>')+'</td>')}).join('')+'</tbody></table></div></div>'}
+  return h;
+}
+
+function vIce(){
+  var cost=sum(data.ice,'cost'),paid=sum(data.icePay,'amount');
+  var h=head('Ice Contracts','Contracted ice, what each slot costs, and every payment to the rinks.',addBtn('ice','Add contract')+addBtn('icePay','Log ice payment'));
+  h+='<div class="tiles">'+tile('Contracted',money(cost),sum(data.ice,'slots')+' ice times')+tile('Paid to rinks',money(paid),pct(paid,cost)+'% of contracts',pct(paid,cost),paid>=cost&&cost>0)+tile('Balance owing',money(Math.max(0,cost-paid)),'')+'</div>';
+  if(!data.ice.length)return h+E('No ice contracts yet','Add each rink contract with its total cost, then log payments against it.');
+  h+='<div class="panel"><h3>Contracts</h3><div class="tw"><table><thead><tr><th>Rink</th><th>Dates</th><th class="n">Ice times</th><th class="n">Per ice</th><th class="n">Cost</th><th class="n">Paid</th><th>Status</th></tr></thead><tbody>';
+  data.ice.forEach(function(c){var p=icePaid(c),bal=num(c.cost)-p;h+=row('ice',c.id,'<td><b>'+esc(c.rink)+'</b>'+(c.label?'<div class="sub">'+esc(c.label)+'</div>':'')+(c.contact?'<div class="sub">Contact: '+esc(c.contact)+'</div>':'')+'</td><td class="nw">'+(c.start?esc(fdate(c.start))+' – '+esc(fdate(c.end)):'<span class="sub">—</span>')+'</td><td class="n">'+esc(c.slots||'')+'</td><td class="n">'+(num(c.slots)>0?money(num(c.cost)/num(c.slots)):'')+'</td><td class="n">'+money(c.cost)+'</td><td class="n">'+money(p)+'</td><td>'+(num(c.cost)<=0?'<span class="pill mute">No cost</span>':bal<=0?'<span class="pill ok">Paid</span>':p>0?'<span class="pill warn">'+money(bal)+' left</span>':'<span class="pill bad">Unpaid</span>')+'</td>')});
+  h+='</tbody></table></div></div>';
+  var ps=data.icePay.slice().sort(function(a,b){return (b.date||'').localeCompare(a.date||'')});
+  if(ps.length)h+='<div class="panel"><h3>Ice payments</h3><div class="tw"><table><thead><tr><th>Date</th><th>Contract</th><th>Paid by</th><th>Method</th><th class="n">Amount</th></tr></thead><tbody>'+ps.map(function(x){var c=byId('ice',x.contractId);return row('icePay',x.id,'<td class="nw">'+esc(fdate(x.date))+'</td><td>'+esc(c?c.rink+(c.label?' — '+c.label:''):'Removed contract')+(x.note?'<div class="sub">'+esc(x.note)+'</div>':'')+'</td><td>'+esc(x.paidBy||'')+'</td><td>'+esc(x.method||'')+'</td><td class="n"><b>'+money(x.amount)+'</b></td>')}).join('')+'</tbody></table></div></div>';
+  return h;
+}
+
+function vRefs(){
+  var fee=sum(data.refs,refOwed),paid=sum(data.refs,'amountPaid');
+  var h0=hostPanel();
+  var h=head('Referees','Who is assigned to each game, what they are owed, and who paid them.',addBtn('refs','Assign official'))+h0;
+  h+='<div class="tiles">'+tile('Owed to refs',money(fee),data.refs.length+' assignments · '+money(data.settings.refFee)+' each a game')+tile('Paid out',money(paid),'',pct(paid,fee),paid>=fee&&fee>0)+tile('Still owed',money(Math.max(0,fee-paid)),data.refs.filter(refUnpaid).length+' officials')+'</div>';
+  if(!data.refs.length)return h+E('No officials assigned yet','Assign a referee or linesman to a game, then record who paid them and how much.');
+  var byPayer={};data.refs.forEach(function(r){if(num(r.amountPaid)>0){var k=r.paidBy||'Not recorded';byPayer[k]=(byPayer[k]||0)+num(r.amountPaid)}});
+  h+='<div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))"><div class="panel" style="grid-column:span 2;min-width:0"><h3>Assignments</h3><div class="tw"><table><thead><tr><th>Game</th><th>Official</th><th>Role</th><th class="n">Owed</th><th class="n">Paid</th><th>Paid by</th><th>Status</th></tr></thead><tbody>';
+  data.refs.slice().sort(function(a,b){var ga=byId('games',a.gameId)||{},gb=byId('games',b.gameId)||{};return ((ga.date||'')+(ga.time||'')).localeCompare((gb.date||'')+(gb.time||''))}).forEach(function(r){var ow=refOwed(r),st=ow<=0?'<span class="pill mute">No fee</span>':!refUnpaid(r)?'<span class="pill ok">Paid</span>':num(r.amountPaid)>0?'<span class="pill warn">Short '+money(ow-num(r.amountPaid))+'</span>':'<span class="pill bad">Unpaid</span>';
+    h+=row('refs',r.id,'<td class="nw">'+esc(gameLabel(byId('games',r.gameId)))+'</td><td><b>'+esc(r.name)+'</b>'+(refInsurance(r)?' <span class="pill pu">First game</span>':'')+'</td><td>'+esc(r.role||'')+'</td><td class="n"><b>'+money(refOwed(r))+'</b><div class="sub">'+esc(refBreakdown(r))+'</div></td><td class="n">'+money(r.amountPaid)+'</td><td>'+esc(r.paidBy||'')+(r.paidDate?'<div class="sub">'+esc(fdate(r.paidDate))+(r.method?' · '+esc(r.method):'')+'</div>':'')+'</td><td>'+st+'</td>')});
+  h+='</tbody></table></div></div>';
+  var ks=Object.keys(byPayer).sort(function(a,b){return byPayer[b]-byPayer[a]});
+  h+='<div class="panel"><h3>Paid by</h3>'+(ks.length?'<div class="list">'+ks.map(function(k){return '<div class="li"><span class="l">'+esc(k)+'</span><b>'+money(byPayer[k])+'</b></div>'}).join('')+'</div>':'<p class="sub">No ref payments recorded yet.</p>')+'</div></div>';
+  return h;
+}
+
+function vBudget(){
+  var fi=feeInfo();
+  var h=head('Budget','Plan the season, then watch actuals fill in from the trackers.',addBtn('budget','Add line')+'<button class="btn sm" data-act="starter">Add starter lines</button>');
+  var cash=cashOnHand(),units=fi.ft+fi.pt*fi.share,collect=fi.ftFee*fi.ft+fi.ptFee*fi.pt;
+  h+='<div class="tiles">'+tile('Planned expenses',money(fi.plannedExpenses),'')+tile('Other planned income',money(fi.otherIncome),'Sponsors, sub fees, fundraising')+
+    tile('Full-time fee',fi.ft||fi.pt?money(fi.ftFee):'—',fi.fixed?'Fixed amount (Fee settings)':(units?money(Math.max(0,fi.need))+' ÷ '+(Math.round(units*10)/10)+' player shares':'Add full-time or part-time players'))+
+    tile('Part-time fee',fi.ft||fi.pt?money(fi.ptFee):'—',Math.round(fi.share*100)+'% of full time')+'</div>';
+  h+='<div class="panel"><div class="li" style="border:0;padding:0"><div class="l"><b>'+(fi.fixed?'Fees are a fixed amount.':'Fees follow the budget.')+'</b> <span class="sub">'+(fi.fixed?'Switch to “Follow the budget” in Fee settings to have fees update as budget lines change.':'Add or change a planned line and every player\'s fee updates. Full-timers count as 1 share, part-timers as '+(Math.round(fi.share*100)/100)+'. Subs pay per game and are not in the split.')+'</span>'+(collect?'<div class="sub">At these fees the roster brings in '+money(collect)+' against '+money(Math.max(0,fi.need))+' needed, a cushion of <b>'+money(collect-Math.max(0,fi.need))+'</b>'+(fi.buffer?' (including the '+money(fi.buffer)+' buffer on each of '+(fi.ft+fi.pt)+' players)':'')+'. Actual net so far: '+money(cash.net)+'.</div>':'')+'</div><button class="btn sm ed-only" data-act="settings">Fee settings</button></div></div>';
+  if(!data.budget.length&&!hostedIcePlanned()&&!hostedRefsPlanned()&&!extraGames()&&!practicePlanned())return h+E('No budget yet','Add lines for ice, refs, league fees and jerseys, or start from the starter lines and change the amounts.');
+  ['Expense','Income'].forEach(function(t){
+    var xg=extraGames(),xi=extraIcePlanned(),xr=extraRefsPlanned(),xn=xg+' more home game'+(xg>1?'s':'')+' (not booked yet)';
+    var pl=practicePlan(),pp=practicePlanned();
+    var hip=hostedIcePlanned(),hrp=hostedRefsPlanned(),hn=data.games.filter(iceCharged).length,hnr=data.games.filter(isHosted).length;
+    var cats=CATS[t].filter(function(c){return data.budget.some(function(b){return b.category===c})||(AUTO[c]&&AUTO[c]()>0)||(c==='Ice'&&(hip>0||xg||pp>0))||(c==='Referees'&&(hrp>0||xr>0))});
+    if(!cats.length)return;
+    var tp=0,ta=0;
+    h+='<div class="panel"><h3>'+(t==='Expense'?'Expenses':'Income')+'</h3><div class="tw"><table><thead><tr><th>Category / item</th><th class="n">Planned</th><th class="n">Actual</th><th class="n">Left</th></tr></thead><tbody>';
+    cats.forEach(function(c){var ls=data.budget.filter(function(b){return b.category===c}),p=sum(ls,'planned')+(c==='Ice'?hip+xi+pp:0)+(c==='Referees'?hrp+xr:0),a=catActual(c);tp+=p;ta+=a;
+      h+='<tr class="cat"><td>'+esc(c)+(AUTO[c]?' <span class="pill pu">auto</span>':'')+'</td><td class="n">'+money(p)+'</td><td class="n">'+money(a)+'</td><td class="n">'+(t==='Expense'?(a>p&&p>0?'<span class="pill bad">over '+money(a-p)+'</span>':money(p-a)):money(p-a))+'</td></tr>';
+      if(c==='Ice'&&hip>0)h+='<tr><td style="padding-left:24px">Ice for '+hn+' game'+(hn>1?'s':'')+' we host <span class="pill pu">auto</span><div class="sub">From the rink rates in Season settings. Includes late-cancelled games whose ice was already paid. Updates as hosted games are added.</div></td><td class="n">'+money(hip)+'</td><td></td><td></td></tr>';
+      if(c==='Referees'&&hrp>0)h+='<tr><td style="padding-left:24px">Refs for '+refGames().length+' booked home game'+(refGames().length>1?'s':'')+' <span class="pill pu">auto</span><div class="sub">'+refsPerGame()+' refs × '+money(num(data.settings.refFee)+num(data.settings.refInsurance))+' a game ('+money(data.settings.refFee)+' fee + '+money(data.settings.refInsurance)+' insurance, assuming new refs). Once refs are assigned it uses what they are actually owed.</div></td><td class="n">'+money(hrp)+'</td><td></td><td></td></tr>';
+      if(c==='Ice'&&xg)h+='<tr><td style="padding-left:24px">Ice for '+esc(xn)+' <span class="pill pu">auto</span><div class="sub">'+xg+' × '+money(extraIcePer())+' at '+esc(extraRink()?extraRink().name:'?')+' rates. Change in Season settings.</div></td><td class="n">'+money(xi)+'</td><td></td><td></td></tr>';
+      if(c==='Ice'&&pp>0){var pn=sum(pl,'n');h+='<tr><td style="padding-left:24px">'+pn+' practice'+(pn>1?'s':'')+', '+esc(data.settings.practiceHours)+' h each <span class="pill pu">auto</span><div class="sub">'+esc(pl.map(function(x){return x.n+' at '+x.rink+' × '+money(x.each)+' ('+money(x.rate)+'/h + GST)'}).join(' · '))+'. No refs. Change in Season settings.</div></td><td class="n">'+money(pp)+'</td><td></td><td></td></tr>'}
+      if(c==='Referees'&&xg&&extraRefGames())h+='<tr><td style="padding-left:24px">Refs for '+extraRefGames()+' unbooked home game'+(extraRefGames()>1?'s':'')+' <span class="pill pu">auto</span><div class="sub">Capped at '+refGameCap()+' ref games for the season. '+extraRefGames()+' × '+refsPerGame()+' refs × '+money(num(data.settings.refFee)+num(data.settings.refInsurance))+' (fee + insurance).</div></td><td class="n">'+money(xr)+'</td><td></td><td></td></tr>';
+      ls.forEach(function(b){h+=row('budget',b.id,'<td style="padding-left:24px">'+esc(b.item)+(b.notes?'<div class="sub">'+esc(b.notes)+'</div>':'')+'</td><td class="n">'+money(b.planned)+'</td><td class="n sub">'+(AUTO[c]?'':money(b.actual))+'</td><td></td>')});
+    });
+    h+='<tr class="tot"><td>Total</td><td class="n">'+money(tp)+'</td><td class="n">'+money(ta)+'</td><td class="n">'+money(tp-ta)+'</td></tr></tbody></table></div></div>';
+  });
+  return h;
+}
+
+function vSheets(){
+  var gs=gamesSorted().filter(function(g){return g.status!=='Cancelled'});
+  var h=head('Gamesheets','Photos or PDFs of every signed gamesheet.','');
+  if(!gs.length)return h+E('No games yet','Gamesheets attach to games. Add games on the Schedule tab first.');
+  var any=false;
+  gs.forEach(function(g){
+    var sh=g.sheets||[];
+    if(!sh.length&&!canEditNow())return;
+    any=true;
+    h+='<div class="panel"><div class="sec-head"><div style="flex:1;min-width:0"><h3 style="margin:0">'+esc(gameLabel(g))+'</h3><div class="sub">'+esc(g.rink||'')+(resultOf(g)?' · '+resultOf(g)+' '+esc(g.gf)+'–'+esc(g.ga):'')+'</div></div>'+(assetsNS?'<button class="btn sm ed-only" data-act="upload" data-game="'+g.id+'">Upload gamesheet</button>':'')+'</div>';
+    if(sh.length){h+='<div class="sheets">'+sh.map(function(s,i){var u='/_blob/'+encodeURIComponent(s.id),pdf=/pdf/.test(s.type||'');return '<div class="sheet"><a href="'+u+'" target="_blank" rel="noopener">'+(pdf?'<div class="pdf">PDF</div>':'<img src="'+u+'" alt="Gamesheet '+esc(s.name)+'" loading="lazy">')+'<div class="cap">'+esc(s.name||'Gamesheet')+'</div></a><button class="btn sm danger ed-only" style="margin:0 8px 8px" data-act="rmsheet" data-game="'+g.id+'" data-i="'+i+'">Remove</button></div>'}).join('')+'</div>'}
+    else h+='<p class="sub" style="margin:6px 0 0">No gamesheet uploaded.</p>';
+    h+='</div>';
+  });
+  if(!any)h+=E('No gamesheets uploaded yet','They will appear here under each game once uploaded.');
+  if(editor&&!assetsNS)h+='<p class="sub">Uploading is not available in this view. Open the dashboard in claude.ai while signed in to upload.</p>';
+  return h;
+}
+
+function beerTurns(){return turnsFor(data.beer,'bringer')}
+function tkPerGame(){return Math.max(1,Math.round(num(data.settings.tkPerGame)||1))}
+function tkTurns(){return turnsFor(data.tk,'responsible',function(p){return !p.volExempt})}
+function turnsFor(list,field,keep){
+  /* everyone on the roster except subs takes a turn; names typed for a turn that are not on the roster still count */
+  var m={};data.roster.filter(function(p){var t=rosterType(p);return t!=='Sub'&&t!=='Coach'&&(!keep||keep(p))}).forEach(function(p){m[p.name.trim().toLowerCase()]={who:p.name,n:0,last:'',next:''}});
+  list.forEach(function(b){var k=String(b[field]||'').trim().toLowerCase();if(!k)return;var g=byId('games',b.gameId)||{};if(g.status==='Cancelled')return;var e=m[k]=m[k]||{who:String(b[field]).trim(),n:0,last:'',next:''};
+    if(g.date&&g.date>=todayStr()){if(!e.next||g.date<e.next)e.next=g.date}else{e.n++;if((g.date||'')>e.last)e.last=g.date||''}});
+  return Object.keys(m).map(function(k){return m[k]}).sort(function(x,y){return (x.n+(x.next?1:0))-(y.n+(y.next?1:0))||(x.last||'').localeCompare(y.last||'')||x.who.localeCompare(y.who)});
+}
+function vBeer(){
+  var h=head('Beer','Everyone takes a turn bringing the beer. Fewest turns goes next.',addBtn('beer','Add a beer turn'));
+  var turns=beerTurns(),up=gamesSorted().filter(function(g){return g.status!=='Cancelled'&&g.date>=todayStr()}),queue=turns.filter(function(t){return !t.next});
+  var qi=0;
+  h+='<div class="grid2"><div class="panel"><h3>Upcoming games</h3>'+(up.length?'<div class="list">'+up.map(function(g){var bs=data.beer.filter(function(b){return b.gameId===g.id});
+      var who=bs.length?'<b>'+esc(bs.map(function(b){return b.bringer}).join(', '))+'</b>':(queue[qi]?'<span class="sub">Up next: '+esc(queue[qi++].who)+'</span>':'<span class="pill warn">Nobody yet</span>');
+      return '<div class="li"><div class="l"><b>'+esc(fdate(g.date))+'</b> <span class="sub">'+esc(ftime(g.time))+'</span><div class="sub">'+(g.ha==='Away'?'@ ':'vs ')+esc(g.opponent||'TBD')+' · '+esc(g.rink||'Rink TBD')+'</div></div><div style="text-align:right">'+who+(bs.length?'':'<div><button class="btn sm ed-only" data-act="beerturn" data-game="'+g.id+'">Assign</button></div>')+'</div></div>'}).join('')+'</div>':'<p class="sub">No upcoming games.</p>')+'</div>';
+  h+='<div class="panel"><h3>Turns so far</h3>'+(turns.length?'<div class="list">'+turns.map(function(t){return '<div class="li"><div class="l"><b>'+esc(t.who)+'</b><div class="sub">'+(t.last?'Last brought '+esc(fdate(t.last)):'Hasn\'t had a turn yet')+(t.next?' · next on '+esc(fdate(t.next)):'')+'</div></div><span class="pill '+(t.n?'mute':'warn')+'">'+t.n+' turn'+(t.n===1?'':'s')+'</span></div>'}).join('')+'</div>':'<p class="sub">Add players to the roster to start the rotation.</p>')+'</div></div>';
+  var past=data.beer.filter(function(b){var g=byId('games',b.gameId);return g&&g.date<todayStr()}).sort(function(x,y){return (byId('games',y.gameId).date||'').localeCompare(byId('games',x.gameId).date||'')});
+  if(past.length)h+='<div class="panel"><h3>Who brought it</h3><div class="tw"><table><thead><tr><th>Game</th><th>Brought by</th><th>Note</th></tr></thead><tbody>'+past.map(function(b){return row('beer',b.id,'<td class="nw">'+esc(gameLabel(byId('games',b.gameId)))+'</td><td><b>'+esc(b.bringer)+'</b></td><td>'+esc(b.note||'')+'</td>')}).join('')+'</tbody></table></div></div>';
+  return h;
+}
+
+function vTK(){
+  var ex=data.roster.filter(function(p){return p.volExempt&&rosterType(p)!=='Coach'});
+  var h=head('Timekeepers','Volunteer commitment: '+tkPerGame()+' players are responsible for bringing timekeepers to each home game. Fewest turns goes next; not everyone will get a turn this season.'+(ex.length?' Exempt: '+esc(ex.map(function(p){return p.name}).join(', '))+'.':''),addBtn('tk','Add a timekeeper turn'));
+  var turns=tkTurns(),queue=turns.filter(function(t){return !t.next}),qi=0;
+  var up=gamesSorted().filter(function(g){return isHosted(g)&&g.date>=todayStr()});
+  h+='<div class="grid2"><div class="panel"><h3>Upcoming home games</h3>'+(up.length?'<div class="list">'+up.map(function(g){var ts=data.tk.filter(function(x){return x.gameId===g.id});
+      var per=tkPerGame(),who=ts.map(function(x){return '<div><b>'+esc(x.responsible)+'</b>'+(x.timekeeper?' <span class="sub">bringing '+esc(x.timekeeper)+'</span>':'')+'</div>'}).join('');
+      for(var k=ts.length;k<per;k++)who+='<div>'+(queue[qi]?'<span class="sub">Up next: '+esc(queue[qi++].who)+'</span>':'<span class="pill warn">Open spot</span>')+'</div>';
+      return '<div class="li"><div class="l"><b>'+esc(fdate(g.date))+'</b> <span class="sub">'+esc(ftime(g.time))+'</span><div class="sub">vs '+esc(g.opponent||'TBD')+' · '+esc(g.rink)+'</div></div><div style="text-align:right">'+who+(ts.length<tkPerGame()?'<div><button class="btn sm ed-only" data-act="tkturn" data-game="'+g.id+'">Assign</button></div>':'')+'</div></div>'}).join('')+'</div>':'<p class="sub">No upcoming home games.</p>')+'</div>';
+  var doneN=turns.filter(function(t){return t.n||t.next}).length;
+  h+='<div class="panel"><h3>Volunteer commitment</h3><p class="sub" style="margin:-4px 0 8px">'+doneN+' of '+turns.length+' players have had or are booked for a turn. '+tkPerGame()+' per home game, so not everyone gets one.</p>'+(turns.length?'<div class="list">'+turns.map(function(t){return '<div class="li"><div class="l"><b>'+esc(t.who)+'</b><div class="sub">'+(t.last?'Brought one '+esc(fdate(t.last)):'Hasn\'t had a turn yet')+(t.next?' · booked for '+esc(fdate(t.next)):'')+'</div></div>'+(t.n?'<span class="pill ok">Done</span>':t.next?'<span class="pill pu">Booked</span>':'<span class="pill mute">No turn yet</span>')+'</div>'}).join('')+'</div>':'<p class="sub">Add players to the roster to start the rotation.</p>')+'</div></div>';
+  var past=data.tk.filter(function(x){var g=byId('games',x.gameId);return g&&g.date<todayStr()});
+  if(past.length)h+='<div class="panel"><h3>Past home games</h3><div class="tw"><table><thead><tr><th>Game</th><th>Responsible</th><th>Timekeeper</th></tr></thead><tbody>'+past.map(function(x){return row('tk',x.id,'<td class="nw">'+esc(gameLabel(byId('games',x.gameId)))+'</td><td><b>'+esc(x.responsible)+'</b></td><td>'+esc(x.timekeeper||'')+'</td>')}).join('')+'</tbody></table></div></div>';
+  return h;
+}
+function copyBtn(v){return '<button class="btn sm" data-act="copy" data-v="'+esc(v)+'">Copy</button>'}
+function vOwed(){
+  var people=owedBackByPerson(true),open=people.filter(function(p){return p.total>0||p.items.some(function(x){return !x.done&&x.noCost})});
+  var total=round2(sum(people,'total'));
+  var h=head('Owed Back','Money someone outside the roster paid for ice or refs, until the team pays them back.','');
+  if(!people.length)return h+E('Nobody is owed anything','When someone pays the rink or the refs, put their name in “Paid by” and it shows up here.');
+  h+='<div class="tiles">'+tile('Team owes',money(total),open.length+' '+(open.length===1?'person':'people'))+'</div>';
+  people.forEach(function(p){
+    var openItems=p.items.filter(function(x){return !x.done}),doneItems=p.items.filter(function(x){return x.done});
+    h+='<div class="panel"><div class="sec-head"><div style="flex:1;min-width:0"><h3 style="margin:0">'+esc(p.who)+'</h3><div class="sub">'+(p.total>0?'Owed <b style="color:var(--fg)">'+money(p.total)+'</b>':'All paid back')+'</div></div>'+(openItems.length?'<button class="btn sm ed-only" data-act="paidbackall" data-who="'+esc(p.who)+'">Mark all paid back</button>':'')+'</div>';
+    h+='<div class="tw"><table><thead><tr><th>Date</th><th>For</th><th class="n">Amount</th><th></th></tr></thead><tbody>'+openItems.concat(doneItems).map(function(x){
+      return '<tr><td class="nw">'+esc(x.date?fdate(x.date):'')+'</td><td>'+esc(x.what)+'</td><td class="n">'+(x.noCost?'<span class="pill warn">Cost not entered</span>':'<b>'+money(x.amount)+'</b>')+'</td><td class="nw">'+(x.done?'<span class="pill ok">Paid back</span>':'<span class="pill bad">Owed</span> <button class="btn sm ed-only" data-act="paidback" data-kind="'+x.kind+'" data-id="'+esc(x.id)+'">Paid back</button>')+'</td></tr>'}).join('')+'</tbody></table></div></div>';
+  });
+  return h;
+}
+function vContacts(){
+  var h=head('Contacts','Rinks, ref assignor, league office and anyone else the team needs to reach.',addBtn('contacts','Add contact'));
+  if(!data.contacts.length)return h+E('No contacts yet','Add the rink booking office, your ref assignor and the league contact.');
+  return h+'<div class="cards">'+data.contacts.map(function(c){return '<div class="card"'+(canEditNow()?' data-edit="contacts:'+c.id+'" style="cursor:pointer" tabindex="0"':'')+'>'+(c.role?'<div class="rl">'+esc(c.role)+'</div>':'')+'<div class="nm">'+esc(c.name)+'</div>'+(c.org?'<div class="sub">'+esc(c.org)+'</div>':'')+(c.phone?'<div class="cline"><span>'+esc(c.phone)+'</span>'+copyBtn(c.phone)+'</div>':'')+(c.email?'<div class="cline"><span>'+esc(c.email)+'</span>'+copyBtn(c.email)+'</div>':'')+(c.notes?'<div class="sub">'+esc(c.notes)+'</div>':'')+'</div>'}).join('')+'</div>';
+}
+
+var VIEWS={overview:vOverview,schedule:vSchedule,roster:vRoster,payments:vPayments,subs:vSubs,ice:vIce,refs:vRefs,budget:vBudget,owed:vOwed,gamesheets:vSheets,beer:vBeer,timekeepers:vTK,contacts:vContacts};
+
+function render(){
+  var r=record(),app=document.getElementById('app');
+  var y=window.scrollY;
+  document.body.classList.toggle('editing',canEditNow());
+  document.body.classList.toggle('hasbar',!!(editor&&dirty));
+  if(tab==='documents'&&!(canEditNow()&&dbNS))tab='overview';
+  var tabs=canEditNow()&&dbNS?TABS.concat([['documents','Documents']]):TABS;
+  var h='<header class="crest"><div class="wrap"><img src="'+LOGO+'" alt="Edmonton Sr Wolves crest"><div class="grow"><h1>Edmonton <span>Sr</span> Wolves</h1><div class="meta"><span class="chip">Season <b>'+esc(data.settings.season||'')+'</b></span>'+(data.settings.league?'<span class="chip">'+esc(data.settings.league)+'</span>':'')+'<span class="chip">Record <b>'+r.w+'-'+r.l+'-'+r.t+'</b></span><span class="chip">GF <b>'+r.gf+'</b> GA <b>'+r.ga+'</b></span></div></div>'+
+    (editor?'<div class="modebar">'+(preview?'<button class="btn sm" data-act="preview">Back to editing</button>':'<button class="btn sm" data-act="settings">Season settings</button><button class="btn sm" data-act="preview">Preview as team</button>')+'</div>':'')+'</div></header>';
+  h+='<nav class="rail" aria-label="Sections"><div class="wrap" role="tablist">'+tabs.map(function(t){return '<button class="tab" role="tab" data-act="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+'</button>'}).join('')+'</div></nav>';
+  h+='<main><div class="wrap">'+VIEWS[tab]()+'<p class="foot">'+(editor?(preview?'Previewing what the team sees.':(window.WOLVES_HOST?'Changes you save are shared with everyone who has the passcode.':'You can edit. Everyone else with the link sees a read-only view.')):'Read-only team view.')+'</p></div></main>';
+  if(editor&&dirty)h+='<div class="savebar"><div class="wrap"><div class="msg"><b>'+dirty+' unsaved change'+(dirty>1?'s':'')+'.</b> The team sees them once you save.</div><button class="btn sm" data-act="discard">Discard</button><button class="btn pri" data-act="saveall" id="savebtn">Save &amp; share</button></div></div>';
+  app.innerHTML=h+datalists();
+  if(modal)app.insertAdjacentHTML('beforeend',modal.html);
+  window.scrollTo(0,y);
+  renderAskShell();
+}
+
+/* ---------- editing ---------- */
+function fieldHTML(f,val){
+  var k=f[0],lab=f[1],t=f[2],req=f[3],opts=f[4],hint=f[5],dl=f[6],id='f_'+k,v=val==null?'':val,inp;
+  if(t==='textarea')return '<div class="fld wide"><label for="'+id+'">'+esc(lab)+'</label><textarea id="'+id+'">'+esc(v)+'</textarea>'+(hint?'<div class="hint">'+esc(hint)+'</div>':'')+'</div>';
+  if(t==='check')return '<div class="fld chk wide"><input type="checkbox" id="'+id+'"'+(v?' checked':'')+'><label for="'+id+'" style="text-transform:none;letter-spacing:0;font-size:15px;color:var(--fg)">'+esc(lab)+'</label></div>';
+  if(t==='select'||t.indexOf('ref:')===0||t==='cat'){
+    var o=t==='select'?opts.map(function(x){return [x,x]}):t==='cat'?null:refOptions(t.slice(4));
+    inp='<select id="'+id+'"'+(req?' required':'')+'><option value="">'+(req?'Choose…':'—')+'</option>'+(o?o.map(function(x){return '<option value="'+esc(x[0])+'"'+(String(x[0])===String(v)?' selected':'')+'>'+esc(x[1])+'</option>'}).join(''):['Expense','Income'].map(function(g){return '<optgroup label="'+g+'">'+CATS[g].map(function(c){return '<option'+(c===v?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</optgroup>'}).join(''))+'</select>';
+  } else {
+    var type=t==='money'||t==='number'?'number':t;
+    inp='<input id="'+id+'" type="'+type+'"'+(t==='money'?' step="0.01" min="0" inputmode="decimal"':'')+(t==='number'?' step="1" inputmode="numeric"':'')+(req?' required':'')+(dl?' list="dl-'+dl+'"':'')+' value="'+esc(v)+'">';
+  }
+  return '<div class="fld'+(t==='text'&&k==='name'?' wide':'')+'"><label for="'+id+'">'+esc(lab)+(req?' *':'')+'</label>'+inp+(hint?'<div class="hint">'+esc(hint)+'</div>':'')+'</div>';
+}
+function openForm(c,id,preset){
+  var sc=S[c],obj=c==='settings'?data.settings:(id?byId(c,id):null),vals=obj||preset||{};
+  if(!obj&&!preset){vals={};if(sc.f.some(function(f){return f[0]==='date'}))vals.date=todayStr();if(c==='games'){vals.status='Scheduled';vals.ha='Home'}if(c==='roster')vals.status='Full time';if(c==='subUses'&&num(data.settings.subFee))vals.fee=data.settings.subFee;if(c==='refs')vals.role='Referee';if(c==='subUses'||c==='refs'||c==='beer'){var ng=gamesSorted().filter(function(g){return g.date>=todayStr()})[0];if(ng)vals.gameId=ng.id}}
+  if(c!=='settings'&&sc.f.some(function(f){return f[2].indexOf('ref:')===0&&f[3]&&!refOptions(f[2].slice(4)).length})){
+    var need=sc.f.filter(function(f){return f[2].indexOf('ref:')===0&&f[3]&&!refOptions(f[2].slice(4)).length})[0];
+    toast('Add a '+S[REFMAP[need[2].slice(4)]||need[2].slice(4)].one+' first.');return;
+  }
+  modal={c:c,id:id,html:'<div class="scrim" data-act="scrim"><form class="modal" id="mform" novalidate><h3>'+(id||c==='settings'?'Edit ':'New ')+esc(sc.one)+'</h3><div class="fields">'+sc.f.map(function(f){return fieldHTML(f,vals[f[0]])}).join('')+'</div><div class="err" id="ferr"></div><div class="row">'+(id?'<button type="button" class="btn danger" data-act="del">Delete</button>':'')+'<span class="sp"></span><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn pri">Save</button></div></form></div>'};
+  render();
+  var first=document.querySelector('#mform input,#mform select,#mform textarea');if(first)first.focus();
+}
+function closeModal(){modal=null;render()}
+function changed(){dirty++;lsSet('wolves-draft',JSON.stringify({baseRev:baseRev,data:data}));render()}
+function submitForm(){
+  var c=modal.c,sc=S[c],o={},err='';
+  sc.f.forEach(function(f){var el=document.getElementById('f_'+f[0]);if(!el)return;var v=f[2]==='check'?el.checked:el.value.trim();if(f[3]&&(v===''||v===false))err=err||(f[1]+' is required.');o[f[0]]=v});
+  if(err){document.getElementById('ferr').textContent=err;return}
+  if(c==='settings')Object.assign(data.settings,o);
+  else if(modal.id)Object.assign(byId(c,modal.id),o);
+  else{o.id=uid();if(c==='games')o.sheets=[];data[c].push(o)}
+  if(c==='games'){syncHomeAway(modal.id?byId(c,modal.id):o);applyHostIce(modal.id?byId(c,modal.id):o)}
+  if(c==='settings'){data.games.forEach(syncHomeAway);data.games.forEach(applyHostIce)}
+  modal=null;changed();toast('Saved to your draft. Press Save & share when you are done.');
+}
+var armed=null;
+function delCurrent(btn){
+  if(armed!==btn){armed=btn;btn.classList.add('arm');btn.textContent='Tap again to delete';return}
+  removeRecord(modal.c,modal.id);
+  modal=null;armed=null;changed();
+}
+function removeRecord(c,id){
+  data[c]=data[c].filter(function(x){return x.id!==id});
+  if(c==='games'){['refs','beer','tk','subUses'].forEach(function(k){data[k]=data[k].filter(function(x){return x.gameId!==id})})}
+  if(c==='roster')data.payments=data.payments.filter(function(x){return x.playerId!==id});
+  if(c==='ice')data.icePay=data.icePay.filter(function(x){return x.contractId!==id});
+  if(c==='roster')data.subUses=data.subUses.filter(function(x){return x.playerId!==id});
+}
+function openBulk(){
+  modal={c:'bulk',html:'<div class="scrim" data-act="scrim"><form class="modal" id="bform"><h3>Paste players</h3><div class="fld wide"><label for="bulk">One player per line</label><textarea id="bulk" style="min-height:180px" placeholder="Name, Jersey #, Position, Phone, Email, Type"></textarea><div class="hint">Columns: Name, Jersey #, Position (e.g. LW, D, G), Phone, Email, Type (Full time, Part time or Sub; blank means full time). Commas or tabs both work, so you can paste straight from a spreadsheet.</div></div><div class="row"><span class="sp"></span><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn pri">Add players</button></div></form></div>'};
+  render();document.getElementById('bulk').focus();
+}
+function submitBulk(){
+  var n=0;document.getElementById('bulk').value.split(/\r?\n/).forEach(function(line){var p=line.split(/\t|,/).map(function(s){return s.trim()});if(!p[0]||/^name$/i.test(p[0]))return;var pos=(p[2]||'').toUpperCase();data.roster.push({id:uid(),name:p[0],number:(p[1]||'').replace('#',''),pos:pos,status:/^p/i.test(p[5]||'')?'Part time':/^s/i.test(p[5]||'')?'Sub':/^c/i.test(p[5]||'')?'Coach':'Full time',teamlinkt:false,phone:p[3]||'',email:p[4]||'',dues:'',notes:''});n++});
+  modal=null;if(n){changed();toast(n+' player'+(n>1?'s':'')+' added.')}else render();
+}
+function starter(){
+  [['Ice','Season ice contract'],['Referees','Officials (games × fee)'],['League fees','League registration'],['Insurance','Team insurance'],['Jerseys & gear','Socks, pucks, tape'],['Affiliate players','Affiliate players ($100 each)'],['Sub fees','Sub fees collected'],['Sponsors','Team sponsor']].forEach(function(x){data.budget.push({id:uid(),category:x[0],item:x[1],planned:'',actual:'',notes:''})});
+  changed();toast('Starter lines added. Tap each one to set amounts.');
+}
+
+/* ---------- saving: the page republishes itself with the new data ---------- */
+function buildDoc(){
+  var json=JSON.stringify(data).replace(/</g,'\\u003c');
+  return '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>'+RESET+'</style></head><body>'+
+    '<title>Edmonton Sr Wolves</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n'+
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">\n'+
+    '<style id="wolves-style">'+STYLE_SRC+'</style>\n<div id="app"></div>\n'+
+    '<input type="file" id="sheetfile" accept="image/png,image/jpeg,image/webp,application/pdf" hidden>\n'+
+    '<script type="application/json" id="wolves-data">'+json+'<\/script>\n'+
+    '<script type="text/plain" id="wolves-logo">'+LOGO+'<\/script>\n'+
+    '<script id="wolves-app">'+APP_SRC+'<\/script>\n</body></html>';
+}
+var saving=false;
+async function saveAll(){
+  if(saving||!artifactNS)return;saving=true;
+  var b=document.getElementById('savebtn');if(b){b.textContent='Saving…';b.disabled=true}
+  data.rev=baseRev+1;data.updated=new Date().toISOString();
+  try{await artifactNS.publish(buildDoc());toast('Saved. The team link now shows your changes.');
+    if(window.WOLVES_HOST){baseRev=data.rev;dirty=0;lsDel('wolves-draft');saving=false;render()}}
+  catch(e){
+    data.rev=baseRev;saving=false;var code=e&&e.code;
+    if(code==='conflict'&&window.WOLVES_HOST){dirty=0;lsDel('wolves-draft');window.WOLVES_HOST.reload();toast('Someone else saved first, so your changes were not saved. Their version is showing now.');return}
+    if(code==='conflict')toast('A newer version was saved somewhere else. Reloading it now.');
+    else if(code==='not_writer'||code==='not_granted'||code==='not_declared'||code==='capability_disabled'){editor=false;toast('This view is read-only, so changes cannot be saved here.')}
+    else if(code==='rate_limited')toast('Saving too often. Wait a minute, then press Save again.');
+    else if(code==='too_large')toast('The dashboard is too big to save. Remove some old entries and try again.');
+    else toast('Could not save just now. Your changes are kept; press Save again.');
+    render();
+  }
+}
+
+/* ---------- gamesheets ---------- */
+var uploadGame=null;
+var EXT={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp'};
+document.getElementById('sheetfile').addEventListener('change',async function(ev){
+  var file=ev.target.files&&ev.target.files[0];ev.target.value='';if(!file||!uploadGame||!assetsNS)return;
+  var ext=(file.name.split('.').pop()||'').toLowerCase(),type=EXT[ext]||file.type;
+  if(!/^(image\/(png|jpeg|webp)|application\/pdf)$/.test(type)){toast('Use a JPG, PNG, WEBP or PDF file.');return}
+  toast('Uploading '+file.name+'…');
+  try{var r=await assetsNS.upload(file,{type:type});var g=byId('games',uploadGame);g.sheets=g.sheets||[];g.sheets.push({id:r.id,name:file.name,type:r.contentType});changed();toast('Uploaded. Press Save & share so the team can see it.')}
+  catch(e){var c=e&&e.code;toast(c==='too_large'?'That file is over 20 MB. Take a smaller photo.':c==='quota_or_state'?'Storage is full. Remove an old gamesheet first.':c==='rate_limited'?'Too many uploads at once. Wait a moment and retry.':'Upload failed. Try again.')}
+});
+async function removeSheet(btn){
+  if(armed!==btn){armed=btn;btn.classList.add('arm');btn.textContent='Tap again';return}
+  armed=null;var g=byId('games',btn.dataset.game),s=g.sheets[+btn.dataset.i];g.sheets.splice(+btn.dataset.i,1);changed();
+  if(assetsNS&&s)try{await assetsNS.delete(s.id)}catch(e){}
+}
+
+/* ---------- documents: kept in the private db (editors only), never in the team page ---------- */
+var dbNS=null,sampleNS=null,sampleCaps=null,DOCS=[],docsReady=false;
+VIEWS.documents=vDocs;
+function startDocs(){
+  if(!dbNS)return;
+  dbNS.collection('docs').onSnapshot(function(s){
+    DOCS=s.docs.map(function(d){var x=Object.assign({},d.data());x.id=d.id;return x}).sort(function(a,b){return (b.added||'').localeCompare(a.added||'')});
+    docsReady=true;if(tab==='documents'&&!modal)render();
+  },function(){});
+}
+var KIND={pdf:'PDF',image:'Photo',docx:'Word',sheet:'Spreadsheet',text:'Text'};
+function vDocs(){
+  var h=head('Documents','Only you see this tab. Files you add here or drop into Ask stay out of the team link.','<button class="btn pri sm" data-act="docadd">+ Add files</button>');
+  if(!dbNS)return h+E('Documents are not available in this view','Open the dashboard in claude.ai while signed in.');
+  if(!docsReady)return h+'<p class="sub">Loading documents…</p>';
+  if(!DOCS.length)return h+E('No documents yet','Drop contracts, spreadsheets, gamesheet photos or league emails into Ask, or add them here. Ask can read them any time.');
+  return h+'<div class="panel"><div class="tw"><table><thead><tr><th>Document</th><th>Type</th><th>Added</th><th></th></tr></thead><tbody>'+DOCS.map(function(d){
+    return '<tr><td><b>'+esc(d.name)+'</b>'+(d.summary?'<div class="sub">'+esc(d.summary.slice(0,220))+(d.summary.length>220?'…':'')+'</div>':'')+'</td><td class="nw">'+esc(KIND[d.kind]||d.kind||'')+'</td><td class="nw">'+esc(d.added?fdate(d.added.slice(0,10)):'')+'</td><td class="nw"><div class="acts">'+
+      (d.assetId?'<a class="btn sm" href="/_blob/'+encodeURIComponent(d.assetId)+'" target="_blank" rel="noopener">Open</a>':'')+
+      '<button class="btn sm" data-act="docask" data-id="'+esc(d.id)+'">Ask about it</button><button class="btn sm danger" data-act="docdel" data-id="'+esc(d.id)+'">Delete</button></div></td></tr>'}).join('')+'</tbody></table></div></div>';
+}
+var LIBS={pdf:['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js','https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'],docx:['https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js'],sheet:['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js']};
+var loadedLibs={};
+function loadScript(u){return loadedLibs[u]||(loadedLibs[u]=new Promise(function(res,rej){var s=document.createElement('script');s.src=u;s.onload=res;s.onerror=function(){delete loadedLibs[u];rej(new Error('Could not load the file reader. Check your connection and try again.'))};document.head.appendChild(s)}))}
+async function loadLib(k){for(var i=0;i<LIBS[k].length;i++)await loadScript(LIBS[k][i])}
+function kindOf(f){var e=f.name.toLowerCase().split('.').pop();if(e==='pdf')return 'pdf';if(/^(jpe?g|png|webp|gif)$/.test(e))return 'image';if(e==='heic'||e==='heif')return 'heic';if(e==='docx')return 'docx';if(/^(xlsx|xlsm|xls|ods)$/.test(e))return 'sheet';if(/^(csv|tsv|txt|md|json|ics|eml)$/.test(e))return 'text';return 'other'}
+var ASSET_TYPE={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',csv:'text/csv',txt:'text/plain',md:'text/markdown',json:'application/json'};
+async function extract(f){
+  var k=kindOf(f),out={kind:k,text:'',images:[]};
+  if(k==='image'){out.images=[f];return out}
+  if(k==='heic')throw new Error(f.name+' is an iPhone HEIC photo. Share it as a JPG and try again.');
+  if(k==='text'){out.text=await f.text();return out}
+  if(k==='docx'){await loadLib('docx');out.text=(await window.mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()})).value;return out}
+  if(k==='sheet'){await loadLib('sheet');var wb=window.XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});out.text=wb.SheetNames.map(function(n){return '## Sheet: '+n+'\n'+window.XLSX.utils.sheet_to_csv(wb.Sheets[n],{blankrows:false})}).join('\n\n');return out}
+  if(k==='pdf'){
+    await loadLib('pdf');
+    var pdf=await window.pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer()),isEvalSupported:false}).promise,n=Math.min(pdf.numPages,60),parts=[];
+    for(var p=1;p<=n;p++){var tc=await (await pdf.getPage(p)).getTextContent();parts.push(tc.items.map(function(i){return i.str+(i.hasEOL?'\n':' ')}).join('').trim())}
+    out.text=parts.map(function(t,i){return '--- Page '+(i+1)+' ---\n'+t}).join('\n');
+    if(parts.join('').replace(/\s/g,'').length<40*n){
+      out.scanned=true;
+      var max=Math.min(n,(sampleCaps&&sampleCaps.images&&sampleCaps.images.maxCount)||0,5);
+      for(var q=1;q<=max;q++){var pg=await pdf.getPage(q),vp=pg.getViewport({scale:1.6}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;out.images.push(await new Promise(function(r){cv.toBlob(r,'image/jpeg',0.85)}))}
+    }
+    return out;
+  }
+  throw new Error(f.name+' is a file type Ask cannot read. Use PDF, Word, Excel, CSV, text or a JPG/PNG photo.');
+}
+async function storeFile(f,ex){
+  var t=ASSET_TYPE[f.name.toLowerCase().split('.').pop()],assetId=null;
+  if(t&&assetsNS){try{assetId=(await assetsNS.upload(f,{type:t})).id}catch(e){}}
+  var doc={name:f.name,kind:ex.kind,size:f.size,assetId:assetId,assetType:t||'',text:(ex.text||'').slice(0,100000),summary:'',added:new Date().toISOString()};
+  if(!dbNS)return Object.assign({id:'unsaved-'+uid()},doc);
+  var ref=await dbNS.collection('docs').add(doc);
+  return Object.assign({id:ref.id},doc);
+}
+async function addDocsOnly(files){
+  for(var i=0;i<files.length;i++){var f=files[i];toast('Reading '+f.name+'…');try{await storeFile(f,await extract(f))}catch(e){toast(e.message);return}}
+  toast(files.length+' file'+(files.length>1?'s':'')+' added to Documents.');
+}
+async function deleteDoc(btn){
+  if(armed!==btn){armed=btn;btn.classList.add('arm');btn.textContent='Tap again';return}
+  armed=null;var d=DOCS.find(function(x){return x.id===btn.dataset.id});if(!d)return;
+  var inUse=data.games.some(function(g){return (g.sheets||[]).some(function(s){return s.id===d.assetId})});
+  try{await dbNS.doc('docs/'+d.id).delete();if(d.assetId&&assetsNS&&!inUse)await assetsNS.delete(d.assetId);toast('Deleted '+d.name+'.')}catch(e){toast('Could not delete. Try again.')}
+}
+
+/* ---------- Ask ---------- */
+var ask={open:false,busy:false,ctl:null,turns:[],log:[],files:[],docRefs:[]};
+var CNAMES=['roster','payments','subUses','games','refs','ice','icePay','beer','tk','budget','contacts'];
+function labelOf(c,x){
+  if(!x)return '';
+  switch(c){
+    case 'games':return gameLabel(x)+(x.time?' '+ftime(x.time):'');
+    case 'roster':return (x.number?'#'+x.number+' ':'')+x.name;
+    case 'payments':var p=byId('roster',x.playerId);return (p?p.name:'?')+' paid '+money(x.amount)+' on '+x.date;
+    case 'ice':return x.rink+(x.label?' — '+x.label:'');
+    case 'icePay':return money(x.amount)+' to '+labelOf('ice',byId('ice',x.contractId))+' on '+x.date;
+    case 'refs':return x.name+' ('+(x.role||'official')+') — '+gameLabel(byId('games',x.gameId));
+    case 'beer':return x.bringer+' — '+gameLabel(byId('games',x.gameId));
+    case 'tk':return x.responsible+' brings the timekeeper'+(x.timekeeper?' ('+x.timekeeper+')':'')+' — '+gameLabel(byId('games',x.gameId));
+    case 'subUses':var s=byId('roster',x.playerId);return (s?s.name:'?')+' — '+gameLabel(byId('games',x.gameId));
+    case 'budget':return x.category+': '+x.item;
+    default:return x.name||x.id;
+  }
+}
+function schemaText(){
+  return CNAMES.map(function(c){return '- '+c+' ('+S[c].one+'): '+S[c].f.map(function(f){var t=f[2];return f[0]+(f[3]?'*':'')+(t==='select'?' ['+f[4].join('|')+']':t==='cat'?' [category]':t.indexOf('ref:')===0?' [link to '+(REFMAP[t.slice(4)]||t.slice(4))+']':t==='date'?' [YYYY-MM-DD]':t==='time'?' [HH:MM 24h]':t==='money'?' [$]':t==='check'?' [true/false]':'')}).join(', ')}).join('\n');
+}
+function overview(){
+  var r=record(),cash=cashOnHand();
+  return {today:todayStr(),settings:data.settings,fees:feeInfo(),record:r.w+'-'+r.l+'-'+r.t,goalsFor:r.gf,goalsAgainst:r.ga,
+    money:{duesOwed:sum(data.roster,owedBy),duesPaid:sum(data.roster,paidBy),iceContracted:sum(data.ice,'cost'),icePaid:sum(data.icePay,'amount'),refsOwed:sum(data.refs,refOwed),refsPaid:sum(data.refs,'amountPaid'),moneyIn:cash.i,moneyOut:cash.e,balance:cash.net},
+    counts:CNAMES.reduce(function(o,c){o[c]=data[c].length;return o},{}),documents:DOCS.length,unsavedChanges:dirty,
+    nextGames:gamesSorted().filter(function(g){return g.date>=todayStr()&&g.status!=='Cancelled'}).slice(0,5).map(function(g){return {id:g.id,label:labelOf('games',g),rink:g.rink,weHost:isHosted(g)}}),
+    owedBack:owedBackByPerson(false).map(function(p){return {who:p.who,total:p.total,items:p.items.map(function(x){return {kind:x.kind,id:x.id,what:x.what,amount:x.amount,costNotEntered:!!x.noCost}})}}),
+    hostedGamesToDo:gamesSorted().filter(function(g){return isHosted(g)&&g.status!=='Final'&&g.date>=todayStr()}).map(function(g){var st=hostStatus(g);return {id:g.id,label:labelOf('games',g),rink:g.rink,iceCost:iceCostFor(g),iceCostWorkedOut:iceCostNote(g),icePaid:!!g.icePaid,refsAssigned:st.refs.map(function(r){return {name:r.name,owed:refOwed(r),breakdown:refBreakdown(r),paid:num(r.amountPaid)}}),refsNeeded:refsPerGame(),stillToDo:st.todo}})};
+}
+function fit(o){var s=JSON.stringify(o);if(s.length<28000)return o;if(Array.isArray(o.records)){while(JSON.stringify(o).length>28000&&o.records.length>1)o.records.pop();o.note='List cut short. Use a query to narrow it.'}return o}
+function findRecords(c,q,limit){
+  if(CNAMES.indexOf(c)<0)throw new Error('Unknown collection '+c);
+  q=String(q||'').toLowerCase().trim();
+  var list=data[c].map(function(x){var o=Object.assign({},x,{label:labelOf(c,x)});if(c==='roster'){o.owes=owedBy(x);o.paid=paidBy(x)}if(c==='ice')o.paidSoFar=icePaid(x);if(c==='games'){o.result=resultOf(x);o.sheets=(x.sheets||[]).length}return o});
+  if(q)list=list.filter(function(o){return JSON.stringify(o).toLowerCase().indexOf(q)>=0});
+  if(c==='games')list.sort(function(a,b){return ((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||''))});
+  return fit({collection:c,total:list.length,records:list.slice(0,Math.min(num(limit)||60,200))});
+}
+function resolveRef(c,v){
+  v=String(v).trim();if(byId(c,v))return v;
+  var lv=v.toLowerCase(),hits=[];
+  if(c==='games'){hits=data.games.filter(function(g){return g.date===v});if(hits.length!==1)hits=data.games.filter(function(g){return labelOf('games',g).toLowerCase().indexOf(lv)>=0||(g.opponent||'').toLowerCase()===lv})}
+  else if(c==='ice')hits=data.ice.filter(function(x){return labelOf('ice',x).toLowerCase().indexOf(lv)>=0});
+  else{hits=data[c].filter(function(x){return (x.name||'').toLowerCase()===lv});if(!hits.length)hits=data[c].filter(function(x){return (x.name||'').toLowerCase().indexOf(lv)>=0})}
+  if(hits.length===1)return hits[0].id;
+  throw new Error((hits.length?'More than one '+S[c].one+' matches "'+v+'"; use its id from find_records':'No '+S[c].one+' matches "'+v+'"; create it first or use find_records'));
+}
+function normVal(f,v){
+  var t=f[2];if(v==null)return t==='check'?false:'';
+  if(t==='check')return v===true||/^(true|yes|y|1|paid)$/i.test(String(v));
+  if(t==='money'||t==='number'){if(String(v).trim()==='')return '';var n=parseFloat(String(v).replace(/[$,\s]/g,''));if(!isFinite(n))throw new Error(f[1]+' must be a number');return String(n)}
+  if(t==='select'){var m=f[4].find(function(o){return o.toLowerCase()===String(v).toLowerCase()});if(!m)throw new Error(f[0]+' must be one of '+f[4].join(', '));return m}
+  if(t==='cat'){var all=CATS.Expense.concat(CATS.Income),m2=all.find(function(o){return o.toLowerCase()===String(v).toLowerCase()});if(!m2)throw new Error('category must be one of '+all.join(', '));return m2}
+  if(t==='date'){var s=String(v).trim();if(s&&!/^\d{4}-\d{2}-\d{2}$/.test(s))throw new Error(f[0]+' must be YYYY-MM-DD');return s}
+  if(t==='time'){var tm=String(v).trim().match(/^(\d{1,2}):(\d{2})/);if(!tm)throw new Error(f[0]+' must be HH:MM in 24-hour time');return tm[1].padStart(2,'0')+':'+tm[2]}
+  if(t.indexOf('ref:')===0)return resolveRef(REFMAP[t.slice(4)]||t.slice(4),v);
+  return String(v).trim();
+}
+function saveRecords(c,recs){
+  if(CNAMES.indexOf(c)<0)throw new Error('Unknown collection '+c);
+  if(!Array.isArray(recs))throw new Error('records must be a list');
+  var saved=[],errors=[];
+  recs.slice(0,150).forEach(function(r,i){
+    try{
+      r=r||{};var ex=r.id?byId(c,String(r.id)):null,o={};
+      if(r.id&&!ex)throw new Error('no '+S[c].one+' has id '+r.id);
+      S[c].f.forEach(function(f){if(r[f[0]]!==undefined)o[f[0]]=normVal(f,r[f[0]])});
+      if(ex){Object.assign(ex,o);saved.push({id:ex.id,label:labelOf(c,ex),updated:Object.keys(o)});return}
+      S[c].f.forEach(function(f){if(f[3]&&(o[f[0]]==null||o[f[0]]===''))throw new Error(f[0]+' is required')});
+      var nw={id:uid()};S[c].f.forEach(function(f){nw[f[0]]=o[f[0]]!=null?o[f[0]]:(f[2]==='check'?false:'')});
+      if(c==='games'){nw.sheets=[];nw.status=nw.status||'Scheduled';nw.ha=nw.ha||'Home'}
+      if(c==='roster')nw.status=nw.status||'Full time';if(c==='subUses'&&nw.fee===''&&num(data.settings.subFee))nw.fee=data.settings.subFee;
+      data[c].push(nw);saved.push({id:nw.id,label:labelOf(c,nw),created:true});
+    }catch(e){errors.push('Record '+(i+1)+': '+e.message)}
+  });
+  if(c==='games'){data.games.forEach(syncHomeAway);data.games.forEach(applyHostIce)}
+  if(saved.length)changed();
+  return {saved:saved,errors:errors,reminder:'Draft only until the manager presses Save & share.'};
+}
+function snippetAround(t,q){var i=t.toLowerCase().indexOf(q);if(i<0)return null;return t.slice(Math.max(0,i-160),i+240).replace(/\s+/g,' ')}
+function tools(){
+  var C={type:'string',enum:CNAMES};
+  return [
+    {name:'get_overview',description:'Team snapshot: today, season settings, record, money totals, record counts per tracker, and the next 5 games with ids. Call it first when you need context.',execute:function(){return overview()}},
+    {name:'find_records',description:'List records in one tracker with ids, every field and a readable label (roster adds owes/paid; ice adds paidSoFar; games adds result). Optional query filters on any text. Use it to find ids before updating.',inputSchema:{type:'object',properties:{collection:C,query:{type:'string'},limit:{type:'number'}},required:['collection']},execute:function(i){return findRecords(String(i.collection),i.query,i.limit)}},
+    {name:'save_records',description:'Create or update records in one tracker (up to 150 at once). Pass id to update; only the fields you send change. Omit id to create. Link fields (gameId, playerId, contractId) take an id, a game date YYYY-MM-DD, an opponent, a player name, or a rink name. Amounts are plain numbers. Returns saved ids and per-record errors.',inputSchema:{type:'object',properties:{collection:C,records:{type:'array',items:{type:'object'}}},required:['collection','records']},execute:function(i){return saveRecords(String(i.collection),i.records)}},
+    {name:'delete_records',description:'Delete records by id from one tracker. Deleting a game also removes its refs, beer and sub entries; a player also removes their payments; a contract its payments. Ask the manager before deleting more than 3.',inputSchema:{type:'object',properties:{collection:C,ids:{type:'array',items:{type:'string'}}},required:['collection','ids']},execute:function(i){var c=String(i.collection);if(CNAMES.indexOf(c)<0)throw new Error('Unknown collection');var done=[];(i.ids||[]).forEach(function(id){var x=byId(c,String(id));if(x){done.push(labelOf(c,x));removeRecord(c,x.id)}});if(done.length)changed();return {deleted:done}}},
+    {name:'update_settings',description:'Change season, fee and hosting settings: hostRinks (comma-separated rinks where we pay ice and refs), season (e.g. 2026-27), league, duesMode ("Follow the budget" or "Fixed amount"), dues (full-time fee when fixed), ptShare (percent of the full-time fee part-timers pay), subFee (per game). Returns settings and the resulting fees.',inputSchema:{type:'object',properties:{season:{type:'string'},league:{type:'string'},duesMode:{type:'string',enum:['Follow the budget','Fixed amount']},dues:{type:'number'},ptShare:{type:'number'},subFee:{type:'number'},refGames:{type:'number'},feeBuffer:{type:'number'},hostRinks:{type:'string'},hostIcePaidBy:{type:'string'},extraHomeGames:{type:'number'},extraHomeRink:{type:'string'},practices:{type:'string'},practiceHours:{type:'number'}}},execute:function(i){['season','league','hostRinks','hostIcePaidBy','extraHomeRink','practices'].forEach(function(k){if(i[k]!=null)data.settings[k]=String(i[k])});if(i.duesMode==='Follow the budget'||i.duesMode==='Fixed amount')data.settings.duesMode=i.duesMode;['dues','ptShare','subFee','extraHomeGames','practiceHours','refGames','feeBuffer','tkPerGame'].forEach(function(k){if(i[k]!=null)data.settings[k]=String(num(i[k]))});changed();return {settings:data.settings,fees:feeInfo()}}},
+    {name:'list_docs',description:'Documents the manager has stored (contracts, spreadsheets, photos, emails): id, name, kind, date added, summary, and text length.',execute:function(){return fit({records:DOCS.map(function(d){return {id:d.id,name:d.name,kind:d.kind,added:(d.added||'').slice(0,10),summary:d.summary||'',textLength:(d.text||'').length,canAttachToGame:!!d.assetId}})})}},
+    {name:'search_docs',description:'Search the text and summaries of every stored document. Returns matching snippets with doc ids.',inputSchema:{type:'object',properties:{query:{type:'string'}},required:['query']},execute:function(i){var q=String(i.query||'').toLowerCase();var hits=[];DOCS.forEach(function(d){var s=snippetAround((d.summary||'')+'\n'+(d.text||''),q)||(d.name.toLowerCase().indexOf(q)>=0?(d.summary||'').slice(0,300):null);if(s!=null)hits.push({id:d.id,name:d.name,snippet:s})});return fit({records:hits.slice(0,25)})}},
+    {name:'read_doc',description:'Read a stored document\'s text by id, 20,000 characters at a time starting at offset.',inputSchema:{type:'object',properties:{id:{type:'string'},offset:{type:'number'}},required:['id']},execute:function(i){var d=DOCS.find(function(x){return x.id===String(i.id)});if(!d)throw new Error('No document with that id');var o=Math.max(0,num(i.offset)),t=d.text||'';return {name:d.name,summary:d.summary||'',offset:o,total:t.length,text:t.slice(o,o+20000),more:o+20000<t.length}}},
+    {name:'update_doc',description:'Save a short summary on a stored document, or a full transcription for a photo or scanned page, so it can be searched later.',inputSchema:{type:'object',properties:{id:{type:'string'},summary:{type:'string'}},required:['id','summary']},execute:async function(i){var d=DOCS.find(function(x){return x.id===String(i.id)});if(!d||!dbNS)throw new Error('No document with that id');await dbNS.doc('docs/'+d.id).update({summary:String(i.summary).slice(0,20000)});d.summary=String(i.summary);return {ok:true}}},
+    {name:'attach_doc_to_game',description:'Show a stored photo or PDF on a game\'s Gamesheets page so the team can see it. Needs the doc id and the game id (or game date).',inputSchema:{type:'object',properties:{docId:{type:'string'},gameId:{type:'string'}},required:['docId','gameId']},execute:function(i){var d=DOCS.find(function(x){return x.id===String(i.docId)});if(!d)throw new Error('No document with that id');if(!d.assetId||!/^(image|application\/pdf)/.test(d.assetType))throw new Error('Only a stored photo or PDF can be attached');var g=byId('games',resolveRef('games',i.gameId));g.sheets=g.sheets||[];if(g.sheets.some(function(s){return s.id===d.assetId}))return {ok:true,already:true};g.sheets.push({id:d.assetId,name:d.name,type:d.assetType});changed();return {ok:true,game:labelOf('games',g)}}}
+  ];
+}
+function rules(){
+  return 'You are the assistant built into the Edmonton Sr Wolves dashboard, a senior women\'s hockey team in Edmonton, Alberta, playing in the CSWHL (Canadian Senior Women\'s Hockey League). You are talking with the team manager, who runs the team\'s money, ice, refs and roster. Today is '+todayStr()+' (Mountain Time).\n\n'+
+  'Use the tools to read and change the dashboard. How it works:\n'+
+  '- Every change you make is a draft. Nothing reaches the team link until the manager presses "Save & share". After making changes, end with one line reminding her to press it.\n'+
+  '- Never invent names, amounts, dates or times. If a document is unclear, say what is missing and ask.\n'+
+  '- When files are attached: say in one or two sentences what each one is, pull out the useful facts, and add them to the right tracker. Ice contract -> ice (rink, label, dates, number of ice times, total cost, rink contact) plus icePay only for payments the document shows as already made; put any payment schedule or deposit due dates in the contract notes. A schedule -> games (date, time, rink, opponent). Ref assignments or ref invoices -> refs. A gamesheet photo -> set that game\'s gf/ga and status Final, then attach_doc_to_game. A roster or contact list -> roster or contacts. Budget numbers -> budget.\n'+
+  '- For every attached photo or scanned page, call update_doc with a short summary (a full transcription for a gamesheet) so it can be searched later.\n'+
+  '- Check for duplicates with find_records before creating records, and update an existing record instead of adding a second one.\n'+
+  '- Ask before deleting more than 3 records.\n'+
+  '- Keep answers short and plain. Short bullet lists are fine. Times are 24-hour HH:MM in the data; say them as 9:30 PM to her.\n\n'+
+  'Trackers (fields marked * are required when creating):\n'+schemaText()+'\n'+
+  'Home/away rule: a game at Morinville or Silent Ice is HOME (we pay ice and refs). A game at any other rink is AWAY and we pay neither ice nor refs, so never add ice costs or ref records to away games. ha is set automatically from the rink.\n'+
+  'A home game that is cancelled after its ice was paid (late cancel) keeps its ice cost; set status Cancelled and leave icePaid true. It needs no refs.\n'+
+  'The budget also holds settings.extraHomeGames (now '+data.settings.extraHomeGames+') home games not booked yet, priced at '+data.settings.extraHomeRink+' ice plus 2 refs with insurance. When one of them gets scheduled, lower extraHomeGames by 1 with update_settings so it is not counted twice.\n'+
+  'Practices: the budget holds settings.practices (now '+data.settings.practices+'), each '+data.settings.practiceHours+' h at that rink\'s hourly rate + GST, with no refs. Change the counts with update_settings (practices, practiceHours).\n'+
+  'Referees are paid for at most settings.refGames ('+data.settings.refGames+') home games in the season, no matter how many are booked; the budget plans refs for the earliest booked home games, then unbooked ones, up to that cap.\n'+
+  'Home ice: '+(data.settings.hostIcePaidBy?data.settings.hostIcePaidBy+' (the team owner) has paid the ice for every game we host this season, so each hosted game is automatically marked icePaid by them and owed back to them until iceReimbursed is true.':'the team pays hosted ice directly.')+'\n'+
+  'Ice is paid up front for the whole season (Bryan). Refs are pay as we go: when a ROSTER player pays the refs, record a refs record per official with amountPaid (fee + any first-game insurance + mileage), paidBy = that player\'s exact roster name, paidDate and method. That whole amount is automatically taken off the player\'s fees owing and listed in the payment log, so do NOT also add a payments record and do NOT mark it reimbursed. If someone not on the roster pays the refs, it is owed back to them instead.\n'+
+  'Out-of-pocket rule: when a person (not the team) pays for something, record who: games.icePaidBy for hosted-game ice (with icePaid true), refs.paidBy, icePay.paidBy, The team then owes them back until the reimbursed flag (games.iceReimbursed, refs/icePay.reimbursed) is set true. Blank or "Team" in paid-by means the team paid directly. get_overview lists owedBack per person.\n'+
+  'Hosting rule: for games at rinks matching settings.hostRinks (now: '+data.settings.hostRinks+'), the Wolves pay the ice and assign and pay the refs. Ice is worked out automatically as hourly rate x slotHours ('+data.settings.slotHours+' h) + GST ('+data.settings.gst+'%); leave the game iceCost field blank unless the rink charged something different, and set icePaid true once paid. Hosted ice is added to the budget automatically, so never add a separate budget line for it. Refs go in refs records, one per official, always '+data.settings.refsPerGame+' refs per hosted game. Each ref is owed the standard fee ($'+data.settings.refFee+', leave the fee field blank to use it) plus mileage only in special circumstances (mileage field), plus a one-time $'+data.settings.refInsurance+' insurance on their first game with us, which is added automatically to their earliest game (set insured true if they reffed for us before this dashboard). Set amountPaid to what was actually paid. At any other rink the league or the host team handles ice and refs, so do not add ice costs or ref records for those games unless she asks. get_overview lists hostedGamesToDo.\n'+
+  'roster.commitment from the intake form (100%/75% = Full time, 50%/25% = Part time, Affiliate/Spare = Sub on call). roster.reg = REG. on the intake form. roster.availability = their intake notes in their own words. The team does NOT track who is playing each game: never build game-by-game lineups, availability counts or attendance. 100% and 75% players get game-day roster priority when too many want to play.\n'+
+  'roster.teamlinkt = registered on TeamLinkt (true/false). Everyone on the roster as of Oct 25, 2026 is registered; new people start unregistered until she confirms.\n'+
+  'Every full-time and part-time fee includes a flat buffer of settings.feeBuffer (now $'+data.settings.feeBuffer+') on top of the budget split, kept as a cushion.\n'+
+  'Roster types: Full time, Part time, Sub, Coach. Coaches ('+data.roster.filter(function(p){return rosterType(p)==='Coach'}).map(function(p){return p.name}).join(', ')+') never pay anything and are left out of fee splits, sub fees, ref credits and the beer and timekeeper rotations. With duesMode "Follow the budget" the full-time fee = (planned expenses - planned income other than Player dues) / (full-timers + part-timers x ptShare%), rounded up; part-timers pay ptShare% of it; subs pay per game through subUses (playerId = the sub on the roster). Fees recalculate automatically whenever the budget or roster changes, so leave each player\'s dues field blank unless she asks for a special deal for that player.\n'+
+  'Notes: payments = season fee payments from roster players. icePay = payments the team made to rinks. refs = one official per record with fee, amountPaid and paidBy (who handed over the money). subUses = a Sub-type roster player playing one game and their fee. tk = whose turn it is to be responsible for bringing a timekeeper to a HOME game (gameId, responsible = roster player, timekeeper = the person they bring, if known); only home games need one, and the next turn goes to the non-sub player with the fewest past turns. This is the volunteer commitment for players: settings.tkPerGame (2) players per home game, taken in turn by full-time and part-time players with the fewest turns; not everyone has to get a turn. Skip anyone with roster.volExempt true ('+data.roster.filter(function(p){return p.volExempt}).map(function(p){return p.name}).join(', ')+'). Never assign an exempt player. beer = whose turn it is to bring beer to a game (gameId, bringer, note). Beer is a turn rotation only: never record or ask about beer costs or reimbursements. To suggest who is next, pick the non-sub roster player with the fewest past turns. Affiliate players (APs) cost $100 each to bring in. The budget has no AP line (she removed it); do not add one unless she asks. Budget categories: expenses '+CATS.Expense.join(', ')+'; income '+CATS.Income.join(', ')+'. Ice, Referees, Player dues and Sub fees actuals fill in automatically from the trackers, so do not put actuals on those budget lines.';
+}
+var ERR={not_granted:'Ask needs your permission to use Claude. Reload the page and allow it.',sampling_disabled:'Claude is not available for this account.',rate_limited:'You have hit a usage limit. Wait a bit and try again.',session_expired:'Your session expired. Sign in to claude.ai again.',image_rejected:'One of the photos could not be read. Try a JPG or PNG under 20 MB.',prompt_too_large:'That was too much text at once. Attach fewer or smaller files.',refused:'Claude would not answer that. Try rewording it.',empty_completion:'No answer came back. Try asking a simpler question.',tools_unavailable:'Ask cannot change the dashboard in this view. Open it in claude.ai.',images_unavailable:'Photos cannot be sent from this view.'};
+var SUGS=['Read this ice contract and add it to Ice','Add the games in this schedule','Who still owes dues, and how much?','Log $350 e-Transfer from each player in this list','Which refs have not been paid yet?','Build a season budget from last year\'s numbers'];
+function mdLite(t){
+  var lines=esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').split('\n'),out='',inList=false;
+  lines.forEach(function(l){var m=l.match(/^\s*[-•*]\s+(.*)/);if(m){if(!inList){out+='<ul>';inList=true}out+='<li>'+m[1]+'</li>';return}if(inList){out+='</ul>';inList=false}if(l.trim())out+='<p>'+l+'</p>'});
+  return out+(inList?'</ul>':'');
+}
+function renderAskShell(){
+  var root=document.getElementById('askroot');
+  var show=canEditNow()&&!!sampleNS;
+  if(!show){if(root)root.remove();return}
+  if(root)return;
+  root=document.createElement('div');root.id='askroot';
+  root.innerHTML='<button class="askfab" data-ask="open" aria-label="Open Ask"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.6 1.3c0 1.7-2.1 2-2.1 3.2"/><path d="M12 17h.01"/></svg>Ask</button>'+
+    '<aside class="askdrawer" id="askdrawer" hidden aria-label="Ask"><div class="askhd"><h3>Ask Wolves HQ</h3><button class="btn sm" data-ask="clear">New chat</button><button class="btn sm" data-ask="close" aria-label="Close Ask">Close</button></div>'+
+    '<div class="asklog" id="asklog"></div>'+
+    '<form class="askft" id="askform"><div class="attchips" id="askchips"></div><textarea id="askq" placeholder="Ask anything, or drop in contracts, schedules, gamesheet photos…"></textarea>'+
+    '<div class="askrow"><button type="button" class="btn sm" data-ask="attach">Attach files</button><span class="hint">or drag them here</span><span class="sp"></span><button type="button" class="btn sm" data-ask="stop" id="askstop" hidden>Stop</button><button type="submit" class="btn pri" id="asksend">Send</button></div>'+
+    '<input type="file" id="askfile" multiple hidden accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.docx,.xlsx,.xls,.csv,.txt,.md,.json,.ics,.heic"></form></aside>';
+  document.body.appendChild(root);
+  root.addEventListener('click',function(e){var b=e.target.closest('[data-ask]');if(!b)return;var a=b.dataset.ask;
+    if(a==='open')openAsk();else if(a==='close')closeAsk();else if(a==='attach')document.getElementById('askfile').click();else if(a==='stop'){if(ask.ctl)ask.ctl.abort()}
+    else if(a==='clear'){if(ask.busy)return;ask.turns=[];ask.log=[];ask.files=[];ask.docRefs=[];renderLog();renderChips()}
+    else if(a==='rmfile'){ask.files.splice(+b.dataset.i,1);renderChips()}
+    else if(a==='rmref'){ask.docRefs.splice(+b.dataset.i,1);renderChips()}
+    else if(a==='sug'){document.getElementById('askq').value=b.textContent;document.getElementById('askq').focus()}
+    else if(a==='undo')undoTurn(+b.dataset.i)});
+  document.getElementById('askfile').addEventListener('change',function(e){addAskFiles(e.target.files);e.target.value=''});
+  document.getElementById('askform').addEventListener('submit',function(e){e.preventDefault();e.stopPropagation();sendAsk()});
+  document.getElementById('askq').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAsk()}});
+  document.getElementById('askq').addEventListener('paste',function(e){var fs=e.clipboardData&&e.clipboardData.files;if(fs&&fs.length){e.preventDefault();addAskFiles(fs)}});
+  renderLog();
+}
+function openAsk(){var d=document.getElementById('askdrawer');if(!d)return;d.hidden=false;ask.open=true;document.querySelector('.askfab').hidden=true;renderLog();document.getElementById('askq').focus()}
+function closeAsk(){var d=document.getElementById('askdrawer');if(!d)return;d.hidden=true;ask.open=false;document.querySelector('.askfab').hidden=false}
+function addAskFiles(fl){for(var i=0;i<fl.length;i++)ask.files.push(fl[i]);openAsk();renderChips()}
+function renderChips(){var c=document.getElementById('askchips');if(!c)return;c.innerHTML=ask.files.map(function(f,i){return '<span>'+esc(f.name)+'<button type="button" data-ask="rmfile" data-i="'+i+'" aria-label="Remove '+esc(f.name)+'">×</button></span>'}).join('')+ask.docRefs.map(function(d,i){return '<span>Doc: '+esc(d.name)+'<button type="button" data-ask="rmref" data-i="'+i+'" aria-label="Remove '+esc(d.name)+'">×</button></span>'}).join('')}
+function renderLog(){
+  var el=document.getElementById('asklog');if(!el)return;
+  if(!ask.log.length){el.innerHTML='<div class="askintro"><p><b>Drop in anything about the team.</b> Ice contracts, schedules, ref invoices, e-Transfer lists, gamesheet photos. Ask reads them, saves them to Documents, and fills in the right tabs. Nothing goes to the team until you press Save &amp; share.</p><div class="sugs">'+SUGS.map(function(s){return '<button type="button" class="sug" data-ask="sug">'+esc(s)+'</button>'}).join('')+'</div></div>';return}
+  el.innerHTML=ask.log.map(function(m,i){
+    if(m.who==='note')return '<div class="note">'+esc(m.text)+'</div>';
+    if(m.who==='me')return '<div class="msg me">'+esc(m.text)+(m.files&&m.files.length?'<div class="fl">'+m.files.map(function(f){return '<span>'+esc(f)+'</span>'}).join('')+'</div>':'')+'</div>';
+    return '<div class="msg ai">'+(m.text?mdLite(m.text):'')+(m.status?'<div class="st">'+esc(m.status)+'</div>':'')+(m.err?'<div class="er">'+esc(m.err)+'</div>':'')+(m.undo?'<div class="un"><button class="btn sm" data-ask="undo" data-i="'+i+'">Undo these changes</button></div>':'')+'</div>';
+  }).join('');
+  el.scrollTop=el.scrollHeight;
+}
+function setBusy(b){var s=document.getElementById('asksend'),st=document.getElementById('askstop');if(s)s.disabled=b;if(st)st.hidden=!b}
+function undoTurn(i){var m=ask.log[i];if(!m||!m.undo)return;data=JSON.parse(m.undo);delete m.undo;ask.log.push({who:'note',text:'Changes from that answer were undone.'});changed();renderLog()}
+async function sendAsk(){
+  var box=document.getElementById('askq'),q=box.value.trim();
+  if(ask.busy||(!q&&!ask.files.length&&!ask.docRefs.length))return;
+  ask.busy=true;setBusy(true);
+  var files=ask.files.splice(0),refs=ask.docRefs.splice(0);renderChips();box.value='';
+  ask.log.push({who:'me',text:q||'Here are some files.',files:files.map(function(f){return f.name}).concat(refs.map(function(d){return d.name}))});
+  var ai={who:'ai',text:'',status:files.length?'Reading files…':'Thinking…'};ask.log.push(ai);renderLog();
+  var images=[],att=[],budget=140000,maxImg=(sampleCaps&&sampleCaps.images&&sampleCaps.images.maxCount)||0;
+  for(var i=0;i<files.length;i++){
+    var f=files[i];ai.status='Reading '+f.name+'…';renderLog();
+    try{
+      var ex=await extract(f),d=await storeFile(f,ex),t=d.text.slice(0,Math.max(0,Math.min(60000,budget)));budget-=t.length;
+      images=images.concat(ex.images);
+      att.push('[doc id '+d.id+'] '+f.name+' ('+(KIND[ex.kind]||ex.kind)+(ex.scanned?', scanned: page images attached':'')+(ex.kind==='image'?': image attached':'')+')'+(t?'\n'+t+(d.text.length>t.length?'\n[cut here; use read_doc with offset '+t.length+' for the rest]':''):''));
+    }catch(e){ask.log.splice(ask.log.length-1,0,{who:'note',text:e.message});att.push('(Could not read '+f.name+': '+e.message+')')}
+  }
+  refs.forEach(function(d){var t=(d.text||'').slice(0,Math.max(0,Math.min(40000,budget)));budget-=t.length;att.push('[doc id '+d.id+'] '+d.name+' (stored earlier)'+(d.summary?'\nSummary: '+d.summary:'')+(t?'\n'+t:''))});
+  if(images.length>maxImg){ask.log.splice(ask.log.length-1,0,{who:'note',text:maxImg?'Only the first '+maxImg+' images were sent to Claude.':'Photos cannot be sent from this view, so Claude only gets the file names.'});images=images.slice(0,maxImg)}
+  var content=(q||'I attached these files. Tell me what they are and add what belongs in the dashboard.')+(att.length?'\n\nAttached files:\n\n'+att.join('\n\n'):'');
+  ask.turns.push({role:'user',content:content});
+  while(ask.turns.length>12)ask.turns.shift();
+  while(ask.turns.length&&ask.turns[0].role!=='user')ask.turns.shift();
+  var snap=JSON.stringify(data);
+  ai.status='Thinking…';renderLog();
+  ask.ctl=new AbortController();
+  var opts={tools:tools(),signal:ask.ctl.signal,onText:function(u){ai.text=u.text;ai.status='';renderLog()}};
+  if(images.length)opts.images=images;
+  try{
+    var r=await sampleNS([{role:'user',content:rules()}].concat(ask.turns),opts);
+    ai.text=r.text;ask.turns.push({role:'assistant',content:r.text});
+    if(r.truncated)ai.err='The answer was cut short. Ask for less at a time.';
+  }catch(e){
+    ai.text=e.text||'';
+    if(e&&e.code!=='cancelled')ai.err=ERR[e&&e.code]||'Something went wrong reaching Claude. Try again.';
+    else ai.err='Stopped.';
+    if(ai.text)ask.turns.push({role:'assistant',content:ai.text});
+  }
+  ai.status='';
+  if(JSON.stringify(data)!==snap){ask.log.forEach(function(m){if(m!==ai)delete m.undo});ai.undo=snap}
+  ask.busy=false;ask.ctl=null;setBusy(false);renderLog();
+}
+var dragDepth=0;
+document.addEventListener('dragenter',function(e){if(!canEditNow()||!sampleNS)return;if(e.dataTransfer&&Array.prototype.indexOf.call(e.dataTransfer.types,'Files')>=0){dragDepth++;openAsk();var d=document.getElementById('askdrawer');if(d)d.classList.add('drag')}});
+document.addEventListener('dragleave',function(){if(--dragDepth<=0){dragDepth=0;var d=document.getElementById('askdrawer');if(d)d.classList.remove('drag')}});
+document.addEventListener('dragover',function(e){if(canEditNow()&&sampleNS)e.preventDefault()});
+document.addEventListener('drop',function(e){if(!canEditNow()||!sampleNS)return;e.preventDefault();dragDepth=0;var d=document.getElementById('askdrawer');if(d)d.classList.remove('drag');if(e.dataTransfer&&e.dataTransfer.files.length)addAskFiles(e.dataTransfer.files)});
+var docInput=document.createElement('input');docInput.type='file';docInput.multiple=true;docInput.hidden=true;docInput.accept='.pdf,.jpg,.jpeg,.png,.webp,.gif,.docx,.xlsx,.xls,.csv,.txt,.md,.json,.ics';
+docInput.addEventListener('change',function(){var fs=Array.prototype.slice.call(docInput.files);docInput.value='';if(fs.length)addDocsOnly(fs)});
+
+/* ---------- events ---------- */
+var tt;
+function toast(m){var t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=m;clearTimeout(tt);tt=setTimeout(function(){t.remove()},3600)}
+function copy(v){function fb(){toast(v)}try{navigator.clipboard.writeText(v).then(function(){toast('Copied')},fb)}catch(e){fb()}}
+function setTab(t){if(!VIEWS[t])return;tab=t;lsSet('wolves-tab',t);modal=null;render();window.scrollTo(0,0)}
+
+document.addEventListener('click',function(e){
+  var a=e.target.closest('[data-act]');
+  if(a){
+    var act=a.dataset.act;
+    if(act==='scrim'){if(e.target===a)closeModal();return}
+    if(act!=='del'&&act!=='rmsheet'&&act!=='docdel'&&armed){armed=null}
+    switch(act){
+      case 'tab':return setTab(a.dataset.tab);
+      case 'add':return openForm(a.dataset.coll);
+      case 'close':return closeModal();
+      case 'del':return delCurrent(a);
+      case 'settings':return openForm('settings');
+      case 'bulk':return openBulk();
+      case 'starter':return starter();
+      case 'addsub':return openForm('roster',null,{status:'Sub'});
+      case 'assignref':return openForm('refs',null,{gameId:a.dataset.game,role:'Referee'});
+      case 'editgame':return openForm('games',a.dataset.game);
+      case 'tkturn':var onG=data.tk.filter(function(x){return x.gameId===a.dataset.game}).map(function(x){return String(x.responsible||'').toLowerCase()});var tn=tkTurns().filter(function(t){return !t.next&&onG.indexOf(t.who.toLowerCase())<0})[0];return openForm('tk',null,{gameId:a.dataset.game,responsible:tn?tn.who:''});
+      case 'beerturn':var nx=beerTurns().filter(function(t){return !t.next})[0];return openForm('beer',null,{gameId:a.dataset.game,bringer:nx?nx.who:''});
+      case 'paidback':if(markPaidBack(a.dataset.kind,a.dataset.id,true)){changed();toast('Marked paid back.')}return;
+      case 'paidbackall':var who=a.dataset.who.toLowerCase(),n=0;owedBackItems().forEach(function(x){if(!x.done&&x.who.toLowerCase()===who&&markPaidBack(x.kind,x.id,true))n++});if(n){changed();toast(n+' item'+(n>1?'s':'')+' marked paid back.')}return;
+      case 'preview':preview=!preview;modal=null;return render();
+      case 'saveall':return saveAll();
+      case 'discard':if(window.WOLVES_HOST){lsDel('wolves-draft');dirty=0;modal=null;window.WOLVES_HOST.reload();return toast('Changes discarded.')}lsDel('wolves-draft');try{data=JSON.parse(DATA_EL.textContent)}catch(x){}Object.keys(DEF).forEach(function(k){if(data[k]==null)data[k]=JSON.parse(JSON.stringify(DEF[k]))});dirty=0;modal=null;render();return toast('Changes discarded.');
+      case 'copy':return copy(a.dataset.v);
+      case 'copyemails':return copy(data.roster.filter(function(p){return p.email}).map(function(p){return p.email}).join(', '));
+      case 'upload':uploadGame=a.dataset.game;document.getElementById('sheetfile').click();return;
+      case 'rmsheet':return removeSheet(a);
+      case 'docadd':return docInput.click();
+      case 'docdel':return deleteDoc(a);
+      case 'docask':var dd=DOCS.find(function(x){return x.id===a.dataset.id});if(dd&&sampleNS){if(ask.docRefs.indexOf(dd)<0)ask.docRefs.push(dd);openAsk();renderChips()}else if(!sampleNS)toast('Ask is not available in this view.');return;
+    }
+    return;
+  }
+  var r=e.target.closest('[data-edit]');
+  if(r&&canEditNow()&&!e.target.closest('button')){var p=r.dataset.edit.split(':');openForm(p[0],p[1])}
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&modal)return closeModal();
+  if(e.key==='Escape'&&ask.open)return closeAsk();
+  if(e.key==='Enter'&&e.target.matches&&e.target.matches('[data-edit]')&&canEditNow()){var p=e.target.dataset.edit.split(':');openForm(p[0],p[1])}
+});
+document.addEventListener('submit',function(e){e.preventDefault();if(e.target.id==='mform')submitForm();else if(e.target.id==='bform')submitBulk()});
+window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(VIEWS[h]&&h!==tab)setTab(h)});
+
+/* ---------- boot ---------- */
+var h0=location.hash.slice(1),saved=lsGet('wolves-tab');
+tab=VIEWS[h0]?h0:(VIEWS[saved]?saved:'overview');
+render();
+(async function(){
+  if(window.WOLVES_HOST){
+    var H=window.WOLVES_HOST;
+    H.onData(function(remote,force){
+      if(saving)return;
+      if(dirty&&!force){toast('Someone else just saved. Save yours to keep your changes, or Discard to see theirs.');return}
+      data=remote&&typeof remote==='object'?remote:{};prep();baseRev=data.rev||0;
+      data.games.forEach(syncHomeAway);data.games.forEach(applyHostIce);render();
+    });
+    H.onUnlock(function(){
+      editor=true;artifactNS={publish:function(){return H.save(data,baseRev)}};
+      try{var d=JSON.parse(lsGet('wolves-draft')||'null');if(d&&d.baseRev===baseRev&&d.data&&JSON.stringify(d.data)!==JSON.stringify(data)){data=d.data;dirty=1;setTimeout(function(){toast('Restored your unsaved changes.')},300)}else if(d)lsDel('wolves-draft')}catch(e){}
+      render();
+    });
+    return;
+  }
+  if(!window.claude||!window.claude.use)return;
+  try{
+    var res=await Promise.all([claude.use('user'),claude.use('artifact'),claude.use('assets')]);
+    var u=res[0];artifactNS=res[1];assetsNS=res[2];
+    editor=!!(u&&artifactNS&&await u.canEdit());
+    if(editor){
+      var more=await Promise.all([claude.use('db'),claude.use('sample')]);
+      dbNS=more[0];sampleNS=more[1];
+      if(sampleNS){try{sampleCaps=await sampleNS.limits();if(!sampleCaps.tools)sampleNS=null}catch(e){sampleCaps=null}}
+      startDocs();
+      try{var d=JSON.parse(lsGet('wolves-draft')||'null');if(d&&d.baseRev===baseRev&&d.data&&JSON.stringify(d.data)!==JSON.stringify(data)){data=d.data;dirty=1;setTimeout(function(){toast('Restored your unsaved changes.')},300)}else if(d)lsDel('wolves-draft')}catch(e){}
+    }
+    render();
+  }catch(e){}
+})();
+})();
+</script>

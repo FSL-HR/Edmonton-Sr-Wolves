@@ -1,0 +1,66 @@
+<!-- ===== Passcode gate: hides the page until the code is entered. Re-asks once per browser session.
+     A light "keep honest people out" lock, not real security: the code is in this file. ===== -->
+<div id="wolves-gate" style="position:fixed;inset:0;z-index:2147483647;background:#0b0a0f;display:flex;align-items:center;justify-content:center;font:400 15px 'Barlow',system-ui,sans-serif">
+  <form id="wolves-gate-form" style="width:min(340px,90vw);text-align:center;color:#f4f2f8;display:grid;gap:10px">
+    <img src="__LOGO__" alt="Edmonton Sr Wolves crest" style="width:96px;height:96px;border-radius:16px;margin:0 auto 6px">
+    <div style="font:800 26px 'Saira Condensed','Arial Narrow',sans-serif;letter-spacing:.04em;text-transform:uppercase">Edmonton Sr Wolves</div>
+    <div style="color:#a39eb2;font-size:13px;margin-bottom:8px">Owner and captains only</div>
+    <input id="wolves-gate-input" type="password" autocomplete="off" placeholder="Passcode" aria-label="Passcode"
+      style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid #2b2737;background:#15131c;color:#f4f2f8;font-size:16px;text-align:center;letter-spacing:2px">
+    <div id="wolves-gate-err" style="color:#ff6b7a;font-size:13px;min-height:16px"></div>
+    <button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;background:#6f45cf;color:#fff;font:700 15px 'Barlow',system-ui,sans-serif;cursor:pointer">Unlock</button>
+  </form>
+</div>
+<script>
+/* GitHub Pages host for the Wolves dashboard: passcode gate + the shared copy in Firestore (same project as the Control Room). */
+window.WOLVES_HOST=(function(){
+  var CODE='__PASSCODE__',KEY='wolves_gate_ok_v1';
+  var CFG={apiKey:"AIzaSyB-nKg7FKvY78D79tPicdHeYYfYuso5X3A",authDomain:"western-canadian-champio-a32ef.firebaseapp.com",projectId:"western-canadian-champio-a32ef",storageBucket:"western-canadian-champio-a32ef.firebasestorage.app",messagingSenderId:"949427036194",appId:"1:949427036194:web:84e2e333d0b65b6c1f2a7b"};
+  var DOC=['schedules','edmonton-sr-wolves'];
+  var onDataCb=null,onUnlockCb=null,last=null,lastRev=-1,unlocked=false,firstLoad=true,cloud=null;
+  function note(msg){var t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=msg;setTimeout(function(){t.remove()},4000)}
+  function startCloud(){
+    var boot='import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";\n'+
+      'import {getFirestore,doc,onSnapshot,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";\n'+
+      'const app=initializeApp('+JSON.stringify(CFG)+',"wolves");const db=getFirestore(app);\n'+
+      'window.__wolvesCloud={db,ref:doc(db,'+JSON.stringify(DOC[0])+','+JSON.stringify(DOC[1])+'),onSnapshot,runTransaction};\n'+
+      'window.dispatchEvent(new Event("wolves-cloud"));';
+    var s=document.createElement('script');s.type='module';s.textContent=boot;document.head.appendChild(s);
+    window.addEventListener('wolves-cloud',function(){
+      cloud=window.__wolvesCloud;
+      cloud.onSnapshot(cloud.ref,function(snap){
+        var d={};if(snap.exists()){try{d=JSON.parse(snap.data().json||'{}')}catch(e){d={}}}
+        var rev=d.rev||0;
+        if(firstLoad||rev!==lastRev){last=d;lastRev=rev;if(onDataCb)onDataCb(JSON.parse(JSON.stringify(d)),firstLoad)}
+        if(firstLoad){firstLoad=false;if(onUnlockCb)onUnlockCb()}
+      },function(){note('Could not reach the shared copy. Check your connection and reload.')});
+    });
+  }
+  function unlock(){
+    unlocked=true;try{sessionStorage.setItem(KEY,'1')}catch(e){}
+    var g=document.getElementById('wolves-gate');if(g)g.remove();
+    startCloud();
+  }
+  document.getElementById('wolves-gate-form').addEventListener('submit',function(e){
+    e.preventDefault();var v=document.getElementById('wolves-gate-input').value||'';
+    if(v===CODE)unlock();else document.getElementById('wolves-gate-err').textContent='That passcode is not right.';
+  });
+  try{if(sessionStorage.getItem(KEY)==='1')setTimeout(unlock,0)}catch(e){}
+  return {
+    onData:function(fn){onDataCb=fn},
+    onUnlock:function(fn){onUnlockCb=fn},
+    reload:function(){if(onDataCb&&last)onDataCb(JSON.parse(JSON.stringify(last)),true)},
+    /* compare-and-set on rev: refuses to overwrite a copy someone else saved in the meantime */
+    save:function(data,baseRev){
+      if(!cloud)return Promise.reject({code:'upstream_error'});
+      return cloud.runTransaction(cloud.db,function(tx){
+        return tx.get(cloud.ref).then(function(snap){
+          var cur=0;if(snap.exists()){try{cur=(JSON.parse(snap.data().json||'{}').rev)||0}catch(e){}}
+          if(cur!==baseRev)throw {code:'conflict'};
+          tx.set(cloud.ref,{json:JSON.stringify(data),rev:data.rev,updated:data.updated||new Date().toISOString()});
+        });
+      }).then(function(){last=JSON.parse(JSON.stringify(data));lastRev=data.rev}).catch(function(e){throw (e&&e.code==='conflict')?e:{code:'upstream_error',message:String(e&&e.message||e)}});
+    }
+  };
+})();
+</script>
