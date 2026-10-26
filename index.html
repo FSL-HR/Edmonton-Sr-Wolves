@@ -248,7 +248,7 @@ window.WOLVES_HOST=(function(){
   });
   try{if(sessionStorage.getItem(KEY)==='1')setTimeout(unlock,0)}catch(e){}
   /* outdated-version banner: every few minutes (and when the tab comes back) fetch the live page and compare build stamps */
-  var BUILD='2026-10-26 01:01 UTC';
+  var BUILD='2026-10-26 01:08 UTC';
   function showUpdateBanner(){
     if(document.getElementById('wolves-update'))return;
     var d=document.createElement('div');d.id='wolves-update';d.setAttribute('role','alert');
@@ -523,7 +523,6 @@ function vOverview(){
   if(ng){
     var d=pd(ng.date),home=isHosted(ng),refs=data.refs.filter(function(r){return r.gameId===ng.id}),beer=data.beer.filter(function(x){return x.gameId===ng.id}),tks=data.tk.filter(function(x){return x.gameId===ng.id});
     var facts=['<span>'+(ftime(ng.time)||'Time TBD')+'</span>','<span>'+esc(ng.rink||'Rink TBD')+'</span>'];
-    if(home)facts.push('<span>Refs <b>'+(refs.length?esc(refs.map(function(r){return r.name}).join(', ')):'not assigned')+'</b></span>');
     facts.push('<span>Beer <b>'+(beer.length?esc(beer.map(function(x){return x.bringer}).join(', ')):'nobody yet')+'</b></span>');
     if(home)facts.push('<span>Timekeeper <b>'+(tks.length?esc(tks.map(function(x){return x.responsible}).join(', ')):'nobody yet')+'</b></span>');
     h+='<div class="next"><div class="datebox">'+(d?'<div class="m">'+MON[d.getMonth()]+'</div><div class="d">'+d.getDate()+'</div><div class="w">'+DOW[d.getDay()]+'</div>':'<div class="d">TBD</div>')+'</div>'+
@@ -534,7 +533,6 @@ function vOverview(){
   var fi=feeInfo(),owed=sum(data.roster,owedBy),paid=sum(data.roster,paidBy),obTotal=round2(sum(ob,'total'));
   h+='<div class="tiles">'+
     tile('Fees collected',money(paid),'of '+money(owed)+' · full time '+money(fi.ftFee)+', part time '+money(fi.ptFee),pct(paid,owed),paid>=owed&&owed>0)+
-    tile('Owed back',money(obTotal),ob.length?ob.map(function(p){return esc(p.who)}).join(', '):'Nobody is out of pocket')+
     tile('Season budget',money(Math.max(0,fi.need)),'Ice, refs, practices and gear')+
   '</div>';
   // coming up
@@ -570,17 +568,26 @@ function vSchedule(){
   return h+'</tbody></table></div></div>';
 }
 
+var POS_GROUPS=['Forwards','Defence','Forward / Defence','Goalies','Position not set','Coaches'];
+function posGroup(p){
+  if(rosterType(p)==='Coach')return 'Coaches';
+  var ps=String(p.pos||'').toUpperCase().split('·')[0].replace(/\s+/g,''),parts=ps.split('/').filter(Boolean);
+  if(!parts.length)return 'Position not set';
+  if(parts.indexOf('G')>=0)return 'Goalies';
+  var d=parts.indexOf('D')>=0,fw=parts.some(function(x){return /^(F|C|LW|RW|W)$/.test(x)});
+  return d&&fw?'Forward / Defence':d?'Defence':fw?'Forwards':'Position not set';
+}
 function vRoster(){
-  /* grouped: full time, part time, subs, coaches; numbered players first within a group */
-  var ORDER=['Full time','Part time','Sub','Coach'],gi=function(p){var i=ORDER.indexOf(rosterType(p));return i<0?ORDER.length:i};
-  var rs=data.roster.slice().sort(function(a,b){return gi(a)-gi(b)||((a.number?0:1)-(b.number?0:1))||num(a.number)-num(b.number)||(a.name||'').localeCompare(b.name||'')});
+  /* grouped by position (coaches last); full time, part time, subs, then jersey number within a group */
+  var ORDER=['Full time','Part time','Sub','Coach'],ti=function(p){var i=ORDER.indexOf(rosterType(p));return i<0?ORDER.length:i},gi=function(p){return POS_GROUPS.indexOf(posGroup(p))};
+  var rs=data.roster.slice().sort(function(a,b){return gi(a)-gi(b)||ti(a)-ti(b)||((a.number?0:1)-(b.number?0:1))||num(a.number)-num(b.number)||(a.name||'').localeCompare(b.name||'')});
   var fi=feeInfo();
   var h=head('Roster',rs.length?fi.ft+' full time · '+fi.pt+' part time · '+fi.subs+' subs'+(rs.some(function(p){return !p.teamlinkt})?' · <b style="color:var(--bad)">'+rs.filter(function(p){return !p.teamlinkt}).length+' not on TeamLinkt</b>':' · all registered on TeamLinkt')+(fi.coaches?' · '+fi.coaches+' coach'+(fi.coaches>1?'es':''):''):'Full-time players, part-timers, subs and coaches.',addBtn('roster','Add player')+'<button class="btn sm" data-act="bulk">Paste a list</button>'+(rs.some(function(p){return p.email})?'<button class="btn sm" data-act="copyemails">Copy all emails</button>':''));
   if(data.settings.teamlinktCode||data.settings.provinceCode)h+='<div class="panel"><h3>How to register</h3><div class="list">'+(data.settings.teamlinktCode?'<div class="cline"><span>TeamLinkt code <b>'+esc(data.settings.teamlinktCode)+'</b></span>'+copyBtn(data.settings.teamlinktCode)+'</div>':'')+(data.settings.provinceCode?'<div class="cline"><span>Province code <b>'+esc(data.settings.provinceCode)+'</b></span>'+copyBtn(data.settings.provinceCode)+'</div>':'')+'</div></div>';
   if(!rs.length)return h+E('No players yet','Add players one at a time, or paste a list from a spreadsheet.');
   h+='<div class="panel"><div class="tw"><table><thead><tr><th>#</th><th>Name</th><th>Pos</th><th>Type</th><th>Commitment</th><th>Registered</th><th>Phone</th><th>Email</th><th>Owes</th></tr></thead><tbody>';
-  var GROUP={'Full time':'Full time','Part time':'Part time','Sub':'Subs','Coach':'Coaches'},lastG=null;
-  rs.forEach(function(p){var t=rosterType(p);if(t!==lastG){lastG=t;var n=rs.filter(function(x){return rosterType(x)===t}).length;h+='<tr class="cat"><td colspan="9">'+esc(GROUP[t]||t)+' <span class="sub">· '+n+'</span></td></tr>'}h+=row('roster',p.id,'<td>'+(p.number?'<span class="jersey">'+esc(p.number)+'</span>':'')+'</td><td><b>'+esc(p.name)+'</b>'+(p.availability?'<div class="sub">'+esc(p.availability)+'</div>':'')+(p.notes?'<div class="sub">'+esc(p.notes)+'</div>':'')+'</td><td>'+esc(p.pos||'')+'</td><td>'+typePill(p)+'</td><td>'+commitPill(p)+'</td><td class="nw">'+(p.teamlinkt?'<span class="pill ok">TeamLinkt</span>':'<span class="pill bad">Not on TeamLinkt</span>')+'<div>'+(rosterType(p)==='Coach'?'':p.reg?'<span class="pill ok">REG.</span>':'<span class="pill bad">No REG.</span>')+'</div></td><td class="nw">'+esc(p.phone||'')+'</td><td>'+esc(p.email||'')+'</td><td class="nw">'+(rosterType(p)==='Coach'?'<span class="sub">Coach · pays nothing</span>':rosterType(p)==='Sub'?(subFeesOwing(p)?'<span class="pill warn">'+money(subFeesOwing(p))+' sub fees</span>':'<span class="sub">Per game</span>'):payStatus(owedBy(p),paidBy(p)))+'</td>')});
+  var lastG=null;
+  rs.forEach(function(p){var t=posGroup(p);if(t!==lastG){lastG=t;var n=rs.filter(function(x){return posGroup(x)===t}).length;h+='<tr class="cat"><td colspan="9">'+esc(t)+' <span class="sub">· '+n+'</span></td></tr>'}h+=row('roster',p.id,'<td>'+(p.number?'<span class="jersey">'+esc(p.number)+'</span>':'')+'</td><td><b>'+esc(p.name)+'</b>'+(p.availability?'<div class="sub">'+esc(p.availability)+'</div>':'')+(p.notes?'<div class="sub">'+esc(p.notes)+'</div>':'')+'</td><td>'+esc(p.pos||'')+'</td><td>'+typePill(p)+'</td><td>'+commitPill(p)+'</td><td class="nw">'+(p.teamlinkt?'<span class="pill ok">TeamLinkt</span>':'<span class="pill bad">Not on TeamLinkt</span>')+'<div>'+(rosterType(p)==='Coach'?'':p.reg?'<span class="pill ok">REG.</span>':'<span class="pill bad">No REG.</span>')+'</div></td><td class="nw">'+esc(p.phone||'')+'</td><td>'+esc(p.email||'')+'</td><td class="nw">'+(rosterType(p)==='Coach'?'<span class="sub">Coach · pays nothing</span>':rosterType(p)==='Sub'?(subFeesOwing(p)?'<span class="pill warn">'+money(subFeesOwing(p))+' sub fees</span>':'<span class="sub">Per game</span>'):payStatus(owedBy(p),paidBy(p)))+'</td>')});
   return h+'</tbody></table></div></div>';
 }
 
