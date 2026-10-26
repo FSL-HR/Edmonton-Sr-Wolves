@@ -327,6 +327,11 @@ function refInsurance(r){return refIsFirst(r)?num(data.settings.refInsurance):0}
 function refOwed(r){var g=byId('games',r.gameId);if(g&&!isHosted(g))return 0;return round2(refBaseFee(r)+num(r.mileage)+refInsurance(r))}
 function refBreakdown(r){var p=[money(refBaseFee(r))+' fee'];if(num(r.mileage))p.push(money(r.mileage)+' mileage');if(refInsurance(r))p.push(money(refInsurance(r))+' first-game insurance');return p.join(' + ')}
 function refUnpaid(r){return num(r.amountPaid)<refOwed(r)}
+/* every ref we have used, most recent first, with how many games they have done for us */
+function refBook(){
+  var m={};data.refs.forEach(function(r){var k=refKey(r);if(!k)return;var g=byId('games',r.gameId)||{},e=m[k]=m[k]||{name:String(r.name).trim(),n:0,last:''};e.n++;if((g.date||'')>e.last)e.last=g.date||''});
+  return Object.keys(m).map(function(k){return m[k]}).sort(function(a,b){return (b.last||'').localeCompare(a.last||'')||a.name.localeCompare(b.name)});
+}
 function refsPerGame(){return Math.max(0,Math.round(num(data.settings.refsPerGame)))}
 /* planned ref cost for hosted games: assigned refs at what they are owed; open spots at the standard fee plus first-game insurance (her call: budget for new refs every home game) */
 /* extra home games not on the schedule yet: ice at the chosen rink's rate, refs at fee + insurance */
@@ -441,7 +446,7 @@ var S={
   payments:{one:'payment',f:[['playerId','Player','ref:roster',1],['date','Date','date',1],['amount','Amount ($)','money',1],['method','Method','select',0,METHODS],['note','Note','text']]},
   subUses:{one:'sub game',f:[['playerId','Sub','ref:subplayers',1],['gameId','Game','ref:games',1],['fee','Sub fee ($)','money'],['paid','Paid their fee','check'],['note','Note','text']]},
   games:{one:'game',f:[['date','Date','date',1],['time','Start time','time'],['rink','Rink','text',0,0,'','rinks'],['opponent','Opponent','text'],['ha','Home / Away','select',0,['Home','Away'],'Set by the rink: Morinville and Silent Ice are home, every other rink is away.'],['status','Status','select',0,['Scheduled','Played','Cancelled']],['iceCost','Ice cost override ($)','money',0,0,'Leave blank for games we host: it is worked out from the rink rate, slot length and GST. Fill in only if the rink charges something different.'],['icePaid','Ice paid','check'],['icePaidBy','Ice paid by','text',0,0,'Leave blank if the team paid it directly','payers'],['iceReimbursed','Team paid them back for the ice','check'],['notes','Notes','textarea']]},
-  refs:{one:'official',f:[['gameId','Game','ref:games',1],['name','Official','text',1],['role','Role','select',0,['Referee','Linesman']],['fee','Game fee ($)','money',0,0,'Leave blank for the standard fee.'],['mileage','Mileage ($)','money',0,0,'Only for special circumstances.'],['insured','Already reffed for us before (insurance paid)','check'],['amountPaid','Amount paid ($)','money'],['paidBy','Paid by','text',0,0,'Who handed over the money','payers'],['paidDate','Date paid','date'],['method','Method','select',0,METHODS],['reimbursed','Team paid them back','check']]},
+  refs:{one:'official',f:[['gameId','Game','ref:games',1],['name','Official','text',1,0,'Start typing to pick a ref we have used before.','refnames'],['role','Role','select',0,['Referee','Linesman']],['fee','Game fee ($)','money',0,0,'Leave blank for the standard fee.'],['mileage','Mileage ($)','money',0,0,'Only for special circumstances.'],['insured','Already reffed for us before (insurance paid)','check'],['amountPaid','Amount paid ($)','money'],['paidBy','Paid by','text',0,0,'Who handed over the money','payers'],['paidDate','Date paid','date'],['method','Method','select',0,METHODS],['reimbursed','Team paid them back','check']]},
   ice:{one:'ice contract',f:[['rink','Rink','text',1,0,'','rinks'],['label','Contract / slot','text',0,0,'e.g. Fall Sundays 9:30 PM'],['start','First ice date','date'],['end','Last ice date','date'],['slots','Number of ice times','number'],['cost','Total contract cost ($)','money'],['contact','Rink contact','text'],['notes','Notes','textarea']]},
   icePay:{one:'ice payment',f:[['contractId','Contract','ref:ice',1],['date','Date paid','date',1],['amount','Amount ($)','money',1],['method','Method','select',0,METHODS],['paidBy','Paid by','text',0,0,'Leave blank if the team paid it directly','payers'],['reimbursed','Team paid them back','check'],['note','Note','text']]},
   beer:{one:'beer turn',f:[['gameId','Game','ref:games',1],['bringer','Bringing beer','text',1,0,'','people'],['note','Note','text']]},
@@ -465,7 +470,8 @@ function datalists(){
   data.refs.forEach(function(r){if(r.paidBy)payers[r.paidBy]=1});data.icePay.forEach(function(r){if(r.paidBy)payers[r.paidBy]=1});
   data.beer.forEach(function(b){if(b.bringer)people[b.bringer]=1});data.tk.forEach(function(b){if(b.responsible)people[b.responsible]=1});
   function dl(id,o){return '<datalist id="dl-'+id+'">'+Object.keys(o).sort().map(function(v){return '<option value="'+esc(v)+'">'}).join('')+'</datalist>'}
-  return dl('rinks',rinks)+dl('payers',payers)+dl('people',people);
+  var rn={};refBook().forEach(function(x){rn[x.name]=1});
+  return dl('rinks',rinks)+dl('payers',payers)+dl('people',people)+dl('refnames',rn);
 }
 
 /* ---------- rendering ---------- */
@@ -510,7 +516,8 @@ function hostPanel(limit){
     hg.slice(0,limit||99).map(function(g){var st=hostStatus(g);
       return '<tr><td class="nw"><b>'+esc(fdate(g.date))+'</b> '+esc(ftime(g.time))+'<div class="sub">'+(g.ha==='Away'?'@ ':'vs ')+esc(g.opponent||'TBD')+' · '+esc(g.rink)+'</div></td>'+
         '<td class="nw">'+(iceCostFor(g)>0?'<b>'+money(iceCostFor(g))+'</b> '+(g.icePaid?'<span class="pill ok">Paid</span>':'<span class="pill bad">Unpaid</span>')+'<div class="sub">'+esc(iceCostNote(g))+'</div>':'<span class="pill warn">No rate for this rink</span>')+'</td>'+
-        '<td>'+(st.refs.length?esc(st.refs.map(function(r){return r.name}).join(', '))+(st.unpaid.length?' <span class="pill warn">'+st.unpaid.length+' unpaid</span>':' <span class="pill ok">Paid</span>'):'<span class="pill bad">None assigned</span>')+'</td>'+
+        '<td>'+(st.refs.length?esc(st.refs.map(function(r){return r.name}).join(', '))+(st.unpaid.length?' <span class="pill warn">'+st.unpaid.length+' unpaid</span>':' <span class="pill ok">Paid</span>'):'<span class="pill bad">None assigned</span>')+
+          (st.refs.length<refsPerGame()?'<div class="acts ed-only" style="margin-top:6px">'+refBook().filter(function(b){return !st.refs.some(function(r){return refKey(r)===b.name.toLowerCase().replace(/\s+/g,' ')})}).slice(0,6).map(function(b){return '<button class="btn sm" data-act="quickref" data-game="'+g.id+'" data-name="'+esc(b.name)+'">+ '+esc(b.name)+'</button>'}).join('')+'</div>':'')+'</td>'+
         '<td>'+(st.done?'<span class="pill ok">All set</span>':esc(st.todo.join(' · ')))+'</td>'+
         '<td class="nw"><div class="acts ed-only">'+(st.refs.length<refsPerGame()?'<button class="btn sm" data-act="assignref" data-game="'+g.id+'">Assign ref</button>':'')+(st.unpaid.length?'<button class="btn sm pri" data-act="payrefs" data-game="'+g.id+'">Pay refs</button>':'')+(g.icePaid?'':'<button class="btn sm" data-act="icepaid" data-game="'+g.id+'">Mark ice paid</button>')+'</div></td></tr>'}).join('')+'</tbody></table></div></div>';
 }
@@ -612,7 +619,9 @@ function vRefs(){
     h+=row('refs',r.id,'<td class="nw">'+esc(gameLabel(byId('games',r.gameId)))+'</td><td><b>'+esc(r.name)+'</b>'+(refInsurance(r)?' <span class="pill pu">First game</span>':'')+'</td><td>'+esc(r.role||'')+'</td><td class="n"><b>'+money(refOwed(r))+'</b><div class="sub">'+esc(refBreakdown(r))+'</div></td><td class="n">'+money(r.amountPaid)+'</td><td>'+esc(r.paidBy||'')+(r.paidDate?'<div class="sub">'+esc(fdate(r.paidDate))+(r.method?' · '+esc(r.method):'')+'</div>':'')+'</td><td>'+st+'</td>')});
   h+='</tbody></table></div></div>';
   var ks=Object.keys(byPayer).sort(function(a,b){return byPayer[b]-byPayer[a]});
+  var rb=refBook();
   h+='<div class="panel"><h3>Paid by</h3>'+(ks.length?'<div class="list">'+ks.map(function(k){return '<div class="li"><span class="l">'+esc(k)+'</span><b>'+money(byPayer[k])+'</b></div>'}).join('')+'</div>':'<p class="sub">No ref payments recorded yet.</p>')+'</div></div>';
+  h+='<div class="panel"><h3>Refs we have used</h3>'+(rb.length?'<p class="sub" style="margin:-4px 0 8px">Tap a name under a home game above to assign them in one step.</p><div class="list">'+rb.map(function(b){return '<div class="li"><div class="l"><b>'+esc(b.name)+'</b><div class="sub">'+b.n+' game'+(b.n>1?'s':'')+(b.last?' · last '+esc(fdate(b.last)):'')+'</div></div><span class="pill ok">Insured</span></div>'}).join('')+'</div>':'<p class="sub">Refs you assign are remembered here.</p>')+'</div>';
   return h;
 }
 
@@ -735,10 +744,10 @@ function render(){
   if(tab==='documents'&&!(canEditNow()&&dbNS))tab='overview';
   var tabs=canEditNow()&&dbNS?TABS.concat([['documents','Documents']]):TABS;
   var h='<header class="crest"><div class="wrap"><img src="'+LOGO+'" alt="Edmonton Sr Wolves crest"><div class="grow"><h1>Edmonton <span>Sr</span> Wolves</h1><div class="meta"><span class="chip">Season <b>'+esc(data.settings.season||'')+'</b></span>'+(data.settings.league?'<span class="chip">'+esc(data.settings.league)+'</span>':'')+'</div></div>'+
-    (editor?'<div class="modebar">'+(preview?'<button class="btn sm" data-act="preview">Back to editing</button>':'<button class="btn sm" data-act="settings">Season settings</button><button class="btn sm" data-act="preview">Preview as team</button>')+'</div>':'')+'</div></header>';
+    (editor?'<div class="modebar">'+(window.WOLVES_HOST&&!preview?'<span class="chip" id="savestate">'+(saving||dirty?'Saving…':'All changes saved')+'</span>':'')+(preview?'<button class="btn sm" data-act="preview">Back to editing</button>':'<button class="btn sm" data-act="settings">Season settings</button><button class="btn sm" data-act="preview">Preview as team</button>')+'</div>':'')+'</div></header>';
   h+='<nav class="rail" aria-label="Sections"><div class="wrap" role="tablist">'+tabs.map(function(t){return '<button class="tab" role="tab" data-act="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+'</button>'}).join('')+'</div></nav>';
   h+='<main><div class="wrap">'+VIEWS[tab]()+'<p class="foot">'+(editor?(preview?'Previewing what the team sees.':(window.WOLVES_HOST?'Changes you save are shared with everyone who has the passcode.':'You can edit. Everyone else with the link sees a read-only view.')):'Read-only team view.')+'</p></div></main>';
-  if(editor&&dirty)h+='<div class="savebar"><div class="wrap"><div class="msg"><b>'+dirty+' unsaved change'+(dirty>1?'s':'')+'.</b> The team sees them once you save.</div><button class="btn sm" data-act="discard">Discard</button><button class="btn pri" data-act="saveall" id="savebtn">Save &amp; share</button></div></div>';
+  if(editor&&dirty&&!window.WOLVES_HOST)h+='<div class="savebar"><div class="wrap"><div class="msg"><b>'+dirty+' unsaved change'+(dirty>1?'s':'')+'.</b> The team sees them once you save.</div><button class="btn sm" data-act="discard">Discard</button><button class="btn pri" data-act="saveall" id="savebtn">Save &amp; share</button></div></div>';
   app.innerHTML=h+datalists();
   if(modal)app.insertAdjacentHTML('beforeend',modal.html);
   window.scrollTo(0,y);
@@ -771,7 +780,10 @@ function openForm(c,id,preset){
   var first=document.querySelector('#mform input,#mform select,#mform textarea');if(first)first.focus();
 }
 function closeModal(){modal=null;render()}
-function changed(){dirty++;lsSet('wolves-draft',JSON.stringify({baseRev:baseRev,data:data}));render()}
+function changed(){dirty++;lsSet('wolves-draft',JSON.stringify({baseRev:baseRev,data:data}));render();if(window.WOLVES_HOST&&editor)scheduleSave()}
+/* hosted copy: every change goes straight to the shared copy, a moment after the last click */
+var saveTimer=null,saveAgain=false;
+function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(function(){if(saving){saveAgain=true;return}saveAll()},400)}
 function submitForm(){
   var c=modal.c,sc=S[c],o={},err='';
   sc.f.forEach(function(f){var el=document.getElementById('f_'+f[0]);if(!el)return;var v=f[2]==='check'?el.checked:el.value.trim();if(f[3]&&(v===''||v===false))err=err||(f[1]+' is required.');o[f[0]]=v});
@@ -845,9 +857,9 @@ var saving=false;
 async function saveAll(){
   if(saving||!artifactNS)return;saving=true;
   var b=document.getElementById('savebtn');if(b){b.textContent='Saving…';b.disabled=true}
-  data.rev=baseRev+1;data.updated=new Date().toISOString();
-  try{await artifactNS.publish(buildDoc());toast('Saved. The team link now shows your changes.');
-    if(window.WOLVES_HOST){baseRev=data.rev;dirty=0;lsDel('wolves-draft');saving=false;render()}}
+  data.rev=baseRev+1;data.updated=new Date().toISOString();var dirtyAtStart=dirty;
+  try{await artifactNS.publish(buildDoc());if(!window.WOLVES_HOST)toast('Saved. The team link now shows your changes.');
+    if(window.WOLVES_HOST){baseRev=data.rev;dirty=Math.max(0,dirty-dirtyAtStart);if(!dirty)lsDel('wolves-draft');saving=false;render();if(dirty||saveAgain){saveAgain=false;scheduleSave()}}}
   catch(e){
     data.rev=baseRev;saving=false;var code=e&&e.code;
     if(code==='conflict'&&window.WOLVES_HOST){dirty=0;lsDel('wolves-draft');window.WOLVES_HOST.reload();toast('Someone else saved first, so your changes were not saved. Their version is showing now.');return}
@@ -855,6 +867,7 @@ async function saveAll(){
     else if(code==='not_writer'||code==='not_granted'||code==='not_declared'||code==='capability_disabled'){editor=false;toast('This view is read-only, so changes cannot be saved here.')}
     else if(code==='rate_limited')toast('Saving too often. Wait a minute, then press Save again.');
     else if(code==='too_large')toast('The dashboard is too big to save. Remove some old entries and try again.');
+    else if(window.WOLVES_HOST){toast('Could not save just now. Trying again…');setTimeout(scheduleSave,4000)}
     else toast('Could not save just now. Your changes are kept; press Save again.');
     render();
   }
@@ -1167,7 +1180,7 @@ docInput.addEventListener('change',function(){var fs=Array.prototype.slice.call(
 
 /* ---------- events ---------- */
 var tt;
-function toast(m){var t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=m;clearTimeout(tt);tt=setTimeout(function(){t.remove()},3600)}
+function toast(m){if(window.WOLVES_HOST){m=String(m).replace(/^Saved to your draft\.\s*Press Save & share when you are done\.?/,'Saved.').replace(/\s*Press Save & share[^.]*\.?/g,'').trim();if(!m)return}var t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=m;clearTimeout(tt);tt=setTimeout(function(){t.remove()},3600)}
 function copy(v){function fb(){toast(v)}try{navigator.clipboard.writeText(v).then(function(){toast('Copied')},fb)}catch(e){fb()}}
 function setTab(t){if(!VIEWS[t])return;tab=t;lsSet('wolves-tab',t);modal=null;render();window.scrollTo(0,0)}
 
@@ -1189,6 +1202,8 @@ document.addEventListener('click',function(e){
       case 'assignref':return openForm('refs',null,{gameId:a.dataset.game,role:'Referee'});
       case 'editgame':return openForm('games',a.dataset.game);
       case 'payrefs':return openPayRefs(a.dataset.game);
+      case 'quickref':var qg=byId('games',a.dataset.game);if(!qg)return;if(data.refs.filter(function(r){return r.gameId===qg.id}).length>=refsPerGame())return toast('This game already has '+refsPerGame()+' refs.');
+        data.refs.push({id:uid(),gameId:qg.id,name:a.dataset.name,role:'Referee',fee:'',mileage:'',insured:false,amountPaid:'',paidBy:'',paidDate:'',method:'',reimbursed:false});changed();return toast(a.dataset.name+' assigned to '+fdate(qg.date)+'.');
       case 'icepaid':var ig=byId('games',a.dataset.game);if(ig){ig.icePaid=true;if(!String(ig.icePaidBy||'').trim()&&data.settings.hostIcePaidBy)ig.icePaidBy=data.settings.hostIcePaidBy;changed();toast('Ice marked paid'+(ig.icePaidBy?' by '+ig.icePaidBy:'')+'. Press Save & share.')}return;
       case 'tkturn':var onG=data.tk.filter(function(x){return x.gameId===a.dataset.game}).map(function(x){return String(x.responsible||'').toLowerCase()});var tn=tkTurns().filter(function(t){return !t.next&&onG.indexOf(t.who.toLowerCase())<0})[0];return openForm('tk',null,{gameId:a.dataset.game,responsible:tn?tn.who:''});
       case 'beerturn':var nx=beerTurns().filter(function(t){return !t.next})[0];return openForm('beer',null,{gameId:a.dataset.game,bringer:nx?nx.who:''});
