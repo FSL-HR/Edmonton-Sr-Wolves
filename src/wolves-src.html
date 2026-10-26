@@ -299,7 +299,7 @@ function refWhen(r){var g=byId('games',r.gameId)||{};return (g.date||'9999')+(g.
 function refBaseFee(r){return r.fee!==''&&r.fee!=null?num(r.fee):num(data.settings.refFee)}
 function refIsFirst(r){
   var k=refKey(r);if(!k)return false;
-  var mine=data.refs.filter(function(x){return refKey(x)===k});
+  var mine=data.refs.filter(function(x){if(refKey(x)!==k)return false;var g=byId('games',x.gameId);return !g||isHosted(g)});
   if(mine.some(function(x){return x.insured}))return false;
   return mine.sort(function(a,b){return refWhen(a).localeCompare(refWhen(b))})[0]===r;
 }
@@ -373,7 +373,7 @@ function applyHostIce(g){
 function teamPaid(who){return !String(who||'').trim()||/^(the )?team\b/i.test(String(who).trim())}
 function owedBackItems(){
   var out=[];
-  data.games.forEach(function(g){if(g.icePaid&&!teamPaid(g.icePaidBy)){var a=iceCostFor(g);out.push({kind:'gameIce',id:g.id,who:g.icePaidBy.trim(),what:'Ice · '+gameLabel(g)+(g.rink?' · '+g.rink:''),amount:a,done:!!g.iceReimbursed,date:g.date})}});
+  data.games.forEach(function(g){if(g.icePaid&&!teamPaid(g.icePaidBy)){var a=iceCostFor(g);out.push({kind:'gameIce',id:g.id,who:g.icePaidBy.trim(),what:'Ice · '+gameLabel(g)+(g.rink?' · '+g.rink:''),amount:a,noCost:!(a>0),done:!!g.iceReimbursed,date:g.date})}});
   data.refs.forEach(function(r){if(num(r.amountPaid)>0&&!teamPaid(r.paidBy)&&!refCreditTo(r)){var g=byId('games',r.gameId);out.push({kind:'refs',id:r.id,who:r.paidBy.trim(),what:'Ref '+r.name+' · '+gameLabel(g)+(refInsurance(r)?' (incl. $'+num(data.settings.refInsurance)+' insurance)':''),amount:num(r.amountPaid),done:!!r.reimbursed,date:(g&&g.date)||r.paidDate})}});
   data.icePay.forEach(function(x){if(!teamPaid(x.paidBy)){var c=byId('ice',x.contractId);out.push({kind:'icePay',id:x.id,who:x.paidBy.trim(),what:'Ice contract · '+(c?labelOf('ice',c):'?'),amount:num(x.amount),done:!!x.reimbursed,date:x.date})}});
   return out.filter(function(x){return x.amount>0||x.noCost});
@@ -580,7 +580,7 @@ function vIce(){
   var owed=round2(sum(paidSlots.filter(function(g){return !teamPaid(g.icePaidBy)&&!g.iceReimbursed}),iceCostFor));
   var payers={};paidSlots.forEach(function(g){var k=teamPaid(g.icePaidBy)?'The team':g.icePaidBy.trim();payers[k]=round2((payers[k]||0)+iceCostFor(g))});
   var xg=extraGames(),xi=extraIcePlanned(),pl=practicePlan(),pp=practicePlanned();
-  var h=head('Ice','Every ice slot we pay for: our home games at '+esc(hostRinkList().map(function(r){return r.name}).join(' and '))+', plus anything still to book.',addBtn('ice','Add contract')+addBtn('icePay','Log contract payment'));
+  var h=head('Ice','Every ice slot we pay for: our home games at '+esc(hostRinkList().map(function(r){return r.name}).join(' and '))+', plus anything still to book.',addBtn('ice','Add contract')+(data.ice.length?addBtn('icePay','Log contract payment'):''));
   h+='<div class="tiles">'+
     tile('Ice booked',money(slotCost+cCost),slots.length+' game slot'+(slots.length===1?'':'s')+(data.ice.length?' + '+data.ice.length+' contract'+(data.ice.length>1?'s':''):''))+
     tile('Paid',money(round2(sum(paidSlots,iceCostFor))+cPaid),Object.keys(payers).map(function(k){return esc(k)+' '+money(payers[k])}).join(' · ')||'Nothing paid yet',pct(sum(paidSlots,iceCostFor)+cPaid,slotCost+cCost),sum(paidSlots,iceCostFor)+cPaid>=slotCost+cCost&&slotCost+cCost>0)+
@@ -623,7 +623,7 @@ function vRefs(){
 function vBudget(){
   var fi=feeInfo();
   var h=head('Budget','Plan the season, then watch actuals fill in from the trackers.',addBtn('budget','Add line')+'<button class="btn sm" data-act="starter">Add starter lines</button>');
-  var cash=cashOnHand(),units=fi.ft+fi.pt*fi.share,collect=fi.ftFee*fi.ft+fi.ptFee*fi.pt;
+  var cash=cashOnHand(),units=fi.ft+fi.pt*fi.share,collect=sum(data.roster,owedBy);
   h+='<div class="tiles">'+tile('Planned expenses',money(fi.plannedExpenses),'')+tile('Other planned income',money(fi.otherIncome),'Sponsors, sub fees, fundraising')+
     tile('Full-time fee',fi.ft||fi.pt?money(fi.ftFee):'—',fi.fixed?'Fixed amount (Fee settings)':(units?money(Math.max(0,fi.need))+' ÷ '+(Math.round(units*10)/10)+' player shares':'Add full-time or part-time players'))+
     tile('Part-time fee',fi.ft||fi.pt?money(fi.ptFee):'—',Math.round(fi.share*100)+'% of full time')+'</div>';
@@ -676,7 +676,7 @@ function tkTurns(){return turnsFor(data.tk,'responsible',function(p){return !p.v
 function turnsFor(list,field,keep){
   /* everyone on the roster except subs takes a turn; names typed for a turn that are not on the roster still count */
   var m={};data.roster.filter(function(p){var t=rosterType(p);return t!=='Sub'&&t!=='Coach'&&(!keep||keep(p))}).forEach(function(p){m[p.name.trim().toLowerCase()]={who:p.name,n:0,last:'',next:''}});
-  list.forEach(function(b){var k=String(b[field]||'').trim().toLowerCase();if(!k)return;var g=byId('games',b.gameId)||{};if(g.status==='Cancelled')return;var e=m[k]=m[k]||{who:String(b[field]).trim(),n:0,last:'',next:''};
+  list.forEach(function(b){var k=String(b[field]||'').trim().toLowerCase();if(!k)return;var g=byId('games',b.gameId)||{};if(g.status==='Cancelled'||!g.date)return;var e=m[k]=m[k]||{who:String(b[field]).trim(),n:0,last:'',next:''};
     if(g.date&&g.date>=todayStr()){if(!e.next||g.date<e.next)e.next=g.date}else{e.n++;if((g.date||'')>e.last)e.last=g.date||''}});
   return Object.keys(m).map(function(k){return m[k]}).sort(function(x,y){return (x.n+(x.next?1:0))-(y.n+(y.next?1:0))||(x.last||'').localeCompare(y.last||'')||x.who.localeCompare(y.who)});
 }
@@ -731,6 +731,7 @@ function vContacts(){
 
 var VIEWS={overview:vOverview,schedule:vSchedule,roster:vRoster,payments:vPayments,subs:vSubs,ice:vIce,refs:vRefs,budget:vBudget,owed:vOwed,gamesheets:vSheets,beer:vBeer,timekeepers:vTK,contacts:vContacts};
 
+var shownModal=null;
 function render(){
   var app=document.getElementById('app');
   var y=window.scrollY;
@@ -743,8 +744,11 @@ function render(){
   h+='<nav class="rail" aria-label="Sections"><div class="wrap" role="tablist">'+tabs.map(function(t){return '<button class="tab" role="tab" data-act="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+'</button>'}).join('')+'</div></nav>';
   h+='<main><div class="wrap">'+VIEWS[tab]()+'<p class="foot">'+(editor?(preview?'Previewing what the team sees.':(window.WOLVES_HOST?'Changes you save are shared with everyone who has the passcode.'+(window.WOLVES_HOST.build?' Version '+window.WOLVES_HOST.build+'.':''):'You can edit. Everyone else with the link sees a read-only view.')):'Read-only team view.')+'</p></div></main>';
   if(editor&&dirty&&!window.WOLVES_HOST)h+='<div class="savebar"><div class="wrap"><div class="msg"><b>'+dirty+' unsaved change'+(dirty>1?'s':'')+'.</b> The team sees them once you save.</div><button class="btn sm" data-act="discard">Discard</button><button class="btn pri" data-act="saveall" id="savebtn">Save &amp; share</button></div></div>';
+  var fv=null;if(modal&&modal===shownModal){var mf=app.querySelector('.modal');if(mf){fv={};mf.querySelectorAll('input,select,textarea').forEach(function(el){if(el.id&&el.type!=='file')fv[el.id]=el.type==='checkbox'?el.checked:el.value});fv.__focus=document.activeElement&&mf.contains(document.activeElement)?document.activeElement.id:''}}
   app.innerHTML=h+datalists();
   if(modal)app.insertAdjacentHTML('beforeend',modal.html);
+  shownModal=modal;
+  if(fv){Object.keys(fv).forEach(function(k){if(k==='__focus')return;var el=document.getElementById(k);if(el){if(el.type==='checkbox')el.checked=fv[k];else el.value=fv[k]}});if(fv.__focus){var fe=document.getElementById(fv.__focus);if(fe)try{fe.focus({preventScroll:true})}catch(e){}}}
   window.scrollTo(0,y);
   labelTables(app);
   var at=app.querySelector('.tab[aria-selected="true"]');if(at&&at.parentNode.scrollWidth>at.parentNode.clientWidth){var rl=at.parentNode;rl.scrollLeft=Math.max(0,at.offsetLeft-(rl.clientWidth-at.offsetWidth)/2)}
@@ -785,6 +789,33 @@ function openForm(c,id,preset){
   var first=document.querySelector('#mform input,#mform select,#mform textarea');if(first)first.focus();
 }
 function closeModal(){modal=null;render()}
+/* ---------- merging with someone else's save ----------
+   syncedBase = the shared copy our current edits started from. When a newer copy arrives while we have unsaved
+   changes, every record we added, changed or deleted since syncedBase wins; everything else comes from theirs. */
+var syncedBase=null,pendingRemote=null;
+function byIds(a){var m={};(a||[]).forEach(function(x){if(x&&x.id)m[x.id]=x});return m}
+function mergeInto(base,mine,theirs){
+  var out=JSON.parse(JSON.stringify(theirs));out.settings=out.settings||{};
+  CNAMES.forEach(function(c){
+    var B=byIds(base[c]),M=byIds(mine[c]),list=(out[c]||[]).slice(),T=byIds(list);
+    Object.keys(M).forEach(function(id){if(JSON.stringify(M[id])===JSON.stringify(B[id]))return;var i=T[id]?list.indexOf(T[id]):-1;if(i>=0)list[i]=M[id];else list.push(M[id])});
+    Object.keys(B).forEach(function(id){if(!M[id]&&T[id]){var i=list.indexOf(T[id]);if(i>=0)list.splice(i,1)}});
+    out[c]=JSON.parse(JSON.stringify(list));
+  });
+  Object.keys(mine.settings||{}).forEach(function(k){if(JSON.stringify(mine.settings[k])!==JSON.stringify((base.settings||{})[k]))out.settings[k]=mine.settings[k]});
+  return out;
+}
+function normalized(d){var keep=data;data=d&&typeof d==='object'?JSON.parse(JSON.stringify(d)):{};prep();data.games.forEach(syncHomeAway);data.games.forEach(applyHostIce);var out=data;data=keep;return out}
+function applyRemote(remote,force){
+  var theirs=normalized(remote),merge=!force&&dirty>0&&syncedBase;
+  data=merge?mergeInto(JSON.parse(syncedBase),data,theirs):JSON.parse(JSON.stringify(theirs));
+  baseRev=theirs.rev||0;syncedBase=JSON.stringify(theirs);
+  if(!merge&&force)dirty=0;
+  resetUndo();ask.log.forEach(function(m){delete m.undo});
+  if(modal&&modal.id&&modal.c!=='settings'&&S[modal.c]&&!byId(modal.c,modal.id)){modal=null;toast('Someone else just deleted what you had open.')}
+  render();
+  if(merge){lsSet('wolves-draft',JSON.stringify({baseRev:baseRev,data:data}));toast('Someone else saved at the same time. Both sets of changes are kept.');scheduleSave()}
+}
 /* undo / redo: snapshots of the data, taken on every change. Cleared when someone else's save arrives,
    so an undo can never wipe out another person's work. */
 var undoStack=[],redoStack=[],snap=null,UNDO_MAX=50;
@@ -803,6 +834,7 @@ function submitForm(){
   var c=modal.c,sc=S[c],o={},err='';
   sc.f.forEach(function(f){var el=document.getElementById('f_'+f[0]);if(!el)return;var v=f[2]==='check'?el.checked:el.value.trim();if(f[3]&&(v===''||v===false))err=err||(f[1]+' is required.');o[f[0]]=v});
   if(err){document.getElementById('ferr').textContent=err;return}
+  if(modal.id&&c!=='settings'&&!byId(c,modal.id)){modal=null;render();return toast('Someone else deleted this while you were editing it, so your edit was not saved.')}
   if(c==='settings')Object.assign(data.settings,o);
   else if(modal.id)Object.assign(byId(c,modal.id),o);
   else{o.id=uid();if(c==='games')o.sheets=[];data[c].push(o)}
@@ -811,7 +843,15 @@ function submitForm(){
   modal=null;changed();toast('Saved to your draft. Press Save & share when you are done.');
 }
 var armed=null;
+function deleteBlock(c,id){
+  if(c==='games'){var g=byId('games',id);
+    if(data.refs.some(function(r){return r.gameId===id&&num(r.amountPaid)>0}))return 'Refs on this game have already been paid. Set the game to Cancelled instead, so that money stays on the books.';
+    if(g&&g.icePaid)return 'Ice for this game is marked paid. Set the game to Cancelled instead, so the ice cost stays on the books.'}
+  if(c==='roster'&&data.payments.some(function(p){return p.playerId===id}))return 'This player has payments logged. Delete their payments first if you really want to remove them.';
+  return '';
+}
 function delCurrent(btn){
+  var why=deleteBlock(modal.c,modal.id);if(why)return toast(why);
   if(armed!==btn){armed=btn;btn.classList.add('arm');btn.textContent='Tap again to delete';return}
   removeRecord(modal.c,modal.id);
   modal=null;armed=null;changed();
@@ -893,12 +933,16 @@ var saving=false;
 async function saveAll(){
   if(saving||!artifactNS)return;saving=true;
   var b=document.getElementById('savebtn');if(b){b.textContent='Saving…';b.disabled=true}
-  data.rev=baseRev+1;data.updated=new Date().toISOString();var dirtyAtStart=dirty;
+  data.rev=baseRev+1;data.updated=new Date().toISOString();var dirtyAtStart=dirty,sent=JSON.stringify(data);
   try{await artifactNS.publish(buildDoc());if(!window.WOLVES_HOST)toast('Saved. The team link now shows your changes.');
-    if(window.WOLVES_HOST){baseRev=data.rev;dirty=Math.max(0,dirty-dirtyAtStart);if(!dirty)lsDel('wolves-draft');saving=false;render();if(dirty||saveAgain){saveAgain=false;scheduleSave()}}}
+    if(window.WOLVES_HOST){baseRev=data.rev;syncedBase=sent;dirty=Math.max(0,dirty-dirtyAtStart);if(!dirty)lsDel('wolves-draft');saving=false;
+      var pr=pendingRemote;pendingRemote=null;if(pr&&(pr.rev||0)>baseRev){applyRemote(pr);return}
+      render();if(dirty||saveAgain){saveAgain=false;scheduleSave()}}}
   catch(e){
     data.rev=baseRev;saving=false;var code=e&&e.code;
-    if(code==='conflict'&&window.WOLVES_HOST){dirty=0;lsDel('wolves-draft');window.WOLVES_HOST.reload();toast('Someone else saved first, so your changes were not saved. Their version is showing now.');return}
+    if(code==='conflict'&&window.WOLVES_HOST){var lt=pendingRemote||(window.WOLVES_HOST.latest&&window.WOLVES_HOST.latest());pendingRemote=null;
+      if(lt&&(lt.rev||0)>baseRev){dirty=Math.max(dirty,1);applyRemote(lt);return}
+      setTimeout(scheduleSave,1500);return}
     if(code==='conflict')toast('A newer version was saved somewhere else. Reloading it now.');
     else if(code==='not_writer'||code==='not_granted'||code==='not_declared'||code==='capability_disabled'){editor=false;toast('This view is read-only, so changes cannot be saved here.')}
     else if(code==='rate_limited')toast('Saving too often. Wait a minute, then press Save again.');
@@ -922,7 +966,7 @@ document.getElementById('sheetfile').addEventListener('change',async function(ev
 });
 async function removeSheet(btn){
   if(armed!==btn){armed=btn;btn.classList.add('arm');btn.textContent='Tap again';return}
-  armed=null;var g=byId('games',btn.dataset.game),s=g.sheets[+btn.dataset.i];g.sheets.splice(+btn.dataset.i,1);changed();
+  armed=null;var g=byId('games',btn.dataset.game);if(!g||!g.sheets)return render();var s=g.sheets[+btn.dataset.i];g.sheets.splice(+btn.dataset.i,1);changed();
   if(assetsNS&&s)try{await assetsNS.delete(s.id)}catch(e){}
 }
 
@@ -1271,7 +1315,7 @@ document.addEventListener('click',function(e){
   if(r&&canEditNow()&&!e.target.closest('button')){var p=r.dataset.edit.split(':');openForm(p[0],p[1])}
 });
 document.addEventListener('keydown',function(e){
-  if((e.ctrlKey||e.metaKey)&&!e.altKey&&editor&&!modal&&!(e.target.matches&&e.target.matches('input,textarea,select,[contenteditable]'))){
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&canEditNow()&&!modal&&!(e.target.matches&&e.target.matches('input,textarea,select,[contenteditable]'))){
     var k=e.key.toLowerCase();if(k==='z'&&!e.shiftKey){e.preventDefault();return undo()}if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();return redo()}}
   if(e.key==='Escape'&&modal)return closeModal();
   if(e.key==='Escape'&&ask.open)return closeAsk();
@@ -1288,15 +1332,13 @@ render();
   if(window.WOLVES_HOST){
     var H=window.WOLVES_HOST;
     H.onData(function(remote,force){
-      if(saving)return;
-      if(dirty&&!force){toast('Someone else just saved. Save yours to keep your changes, or Discard to see theirs.');return}
-      data=remote&&typeof remote==='object'?remote:{};prep();baseRev=data.rev||0;
-      data.games.forEach(syncHomeAway);data.games.forEach(applyHostIce);resetUndo();render();
+      if(saving){pendingRemote=remote;return}
+      applyRemote(remote,force);
     });
     H.onUnlock(function(){
       editor=true;artifactNS={publish:function(){return H.save(data,baseRev)}};
       try{var d=JSON.parse(lsGet('wolves-draft')||'null');if(d&&d.baseRev===baseRev&&d.data&&JSON.stringify(d.data)!==JSON.stringify(data)){data=d.data;dirty=1;setTimeout(function(){toast('Restored your unsaved changes.')},300)}else if(d)lsDel('wolves-draft')}catch(e){}
-      resetUndo();render();
+      resetUndo();render();if(dirty)scheduleSave();
     });
     return;
   }

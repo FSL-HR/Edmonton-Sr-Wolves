@@ -69,6 +69,7 @@ window.WOLVES_HOST=(function(){
     onData:function(fn){onDataCb=fn},
     onUnlock:function(fn){onUnlockCb=fn},
     reload:function(){if(onDataCb&&last)onDataCb(JSON.parse(JSON.stringify(last)),true)},
+    latest:function(){return last?JSON.parse(JSON.stringify(last)):null},
     /* compare-and-set on rev: refuses to overwrite a copy someone else saved in the meantime */
     save:function(data,baseRev){
       if(!cloud)return Promise.reject({code:'upstream_error'});
