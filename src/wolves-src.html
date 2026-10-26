@@ -446,7 +446,7 @@ function vSchedule(){
     var refs=data.refs.filter(function(x){return x.gameId===g.id}),unpaid=refs.filter(refUnpaid).length,beer=data.beer.filter(function(b){return b.gameId===g.id});
     h+=row('games',g.id,'<td class="nw"><b>'+esc(fdate(g.date))+'</b></td><td class="nw">'+esc(ftime(g.time)||'TBD')+'</td><td>'+(g.ha==='Away'?'@ ':'vs ')+esc(g.opponent||'TBD')+'</td><td>'+esc(g.rink||'')+(isHosted(g)?'<div>'+hostPill(g)+'</div>':'')+'</td><td class="nw">'+
       (g.status==='Cancelled'?'<span class="pill mute">Cancelled</span>'+(iceCharged(g)?'<div class="sub">Ice still paid '+money(iceCostFor(g))+'</div>':''):g.status==='Played'?'<span class="pill mute">Played</span>':'<span class="sub">—</span>')+'</td><td class="nw">'+
-      (refs.length?refs.length+' '+(unpaid?'<span class="pill warn">'+unpaid+' unpaid</span>':'<span class="pill ok">paid</span>'):isHosted(g)?'<span class="pill bad">Assign refs</span>':'<span class="sub">Away · not ours</span>')+'</td><td>'+esc(beer.map(function(b){return b.bringer}).join(', '))+'</td><td class="n">'+((g.sheets||[]).length||'')+'</td>');
+      (g.status==='Cancelled'&&!refs.length?'<span class="sub">—</span>':refs.length?refs.length+' '+(unpaid?'<span class="pill warn">'+unpaid+' unpaid</span>':'<span class="pill ok">paid</span>'):isHosted(g)?'<span class="pill bad">Assign refs</span>':'<span class="sub">Away · not ours</span>')+'</td><td>'+esc(beer.map(function(b){return b.bringer}).join(', '))+'</td><td class="n">'+((g.sheets||[]).length||'')+'</td>');
   });
   return h+'</tbody></table></div></div>';
 }
